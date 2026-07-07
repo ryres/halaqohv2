@@ -3,42 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tahfizh Dashboard - Halaqoh v2</title>
+    <title>Tahfizh Dashboard - Halaqoh Clustering</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
-        header { background: #2c3e50; color: #fff; padding: 1rem; text-align: center; border-radius: 8px; margin-bottom: 20px; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .badge { background: #27ae60; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.9em; }
-        h2 { color: #2c3e50; border-bottom: 2px solid #27ae60; padding-bottom: 10px; }
-        .footer { text-align: center; font-size: 0.8em; color: #7f8c8d; margin-top: 50px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #27ae60; padding-bottom: 10px; }
+        .tech-stack { display: flex; gap: 10px; margin: 20px 0; }
+        .badge { background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85em; border: 1px solid #2e7d32; }
+        .feature-card { border-left: 5px solid #27ae60; background: #f1f8e9; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+        footer { margin-top: 40px; text-align: center; color: #7f8c8d; font-size: 0.9em; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Tahfizh Dashboard</h1>
-        <p>Halaqoh Clustering System v2</p>
-    </header>
+<div class="container">
+    <h1>Tahfizh Dashboard</h1>
+    <p>Sistem pengelompokan halaqoh otomatis berbasis web.</p>
 
-    <div class="card">
-        <h2>Tentang Proyek</h2>
-        <p>Proyek ini adalah sistem pengelolaan data Tahfizh menggunakan algoritma <strong>K-Means Clustering</strong> untuk pengelompokan halaqoh [1, 2].</p>
-        <p><strong>Metode yang digunakan:</strong></p>
+    <div class="tech-stack">
+        <span class="badge">Node.js</span>
+        <span class="badge">Express</span>
+        <span class="badge">MySQL</span>
+        <span class="badge">MVC Architecture</span>
+    </div>
+
+    <div class="feature-card">
+        <h3>Algoritma Clustering</h3>
+        <p>Proyek ini mengimplementasikan <strong>K-Means Clustering</strong> untuk mengorganisir data halaqoh dengan parameter optimasi:</p>
         <ul>
-            <li><span class="badge">Manhattan Distance</span> - Untuk menghitung jarak antar titik data [2].</li>
-            <li><span class="badge">Silhouette Score</span> - Untuk mengevaluasi kualitas cluster yang terbentuk [2].</li>
+            <li><strong>Manhattan Distance:</strong> Digunakan untuk menghitung kedekatan antar data tahfizh.</li>
+            <li><strong>Silhouette Score:</strong> Digunakan untuk validasi dan penentuan jumlah cluster terbaik.</li>
         </ul>
     </div>
 
-    <div class="card">
-        <h2>Status Pengembangan</h2>
-        <p>Versi ini adalah <em>Static Preview</em>. Aplikasi lengkap menggunakan <strong>Node.js, Express, dan MySQL</strong> [1].</p>
-        <p>Untuk menjalankan versi penuh, silakan clone repositori ini dan ikuti instruksi di <code>README.md</code> [1].</p>
+    <h3>Informasi Proyek</h3>
+    <p>Versi asli aplikasi ini menggunakan database <code>tahfizh</code> dan memerlukan konfigurasi file <code>.env</code> untuk berjalan secara penuh [1]. Halaman ini adalah representasi statis untuk keperluan dokumentasi di GitHub Pages.</p>
+    
+    <div style="background: #fff3e0; padding: 10px; border-radius: 5px; border: 1px solid #ffe0b2;">
+        <strong>Catatan Pengembang:</strong> Pastikan untuk mengabaikan folder <code>node_modules</code> dan file <code>.env</code> dalam produksi sebenarnya untuk menjaga keamanan data [3].
     </div>
+</div>
 
-    <div class="footer">
-        <p>&copy; 2026 ryres - Hosted on GitHub Pages</p>
-    </div>
+<footer>
+    <p>&copy; 2026 ryres - Halaqohv2 Project</p>
+</footer>
 
 </body>
 </html>
