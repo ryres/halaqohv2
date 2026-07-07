@@ -1,53 +1,591 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tahfizh Dashboard - Halaqoh Clustering</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 3px solid #27ae60; padding-bottom: 10px; }
-        .tech-stack { display: flex; gap: 10px; margin: 20px 0; }
-        .badge { background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85em; border: 1px solid #2e7d32; }
-        .feature-card { border-left: 5px solid #27ae60; background: #f1f8e9; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
-        code { background: #eee; padding: 2px 5px; border-radius: 4px; }
-        footer { margin-top: 40px; text-align: center; color: #7f8c8d; font-size: 0.9em; }
+        /* --- Reset & Base --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 24px;
+        }
+        .sidebar .logo span {
+            color: #34d399;
+        }
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+            margin-bottom: 4px;
+        }
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+        .sidebar nav a .icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+        .sidebar .footer-nav {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid #1e293b;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* --- Main Content --- */
+        .main {
+            flex: 1;
+            padding: 28px 36px;
+            max-width: calc(100% - 260px);
+        }
+
+        /* --- Header --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        .header h1 small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #64748b;
+            margin-left: 8px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-right .date-badge {
+            background: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #34d399;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* --- Cards --- */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 32px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 20px 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf2;
+            transition: 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+        .card .label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-top: 4px;
+            color: #0f172a;
+        }
+        .card .trend {
+            font-size: 0.8rem;
+            margin-top: 6px;
+            color: #34d399;
+            font-weight: 500;
+        }
+        .card .trend.down {
+            color: #f87171;
+        }
+        .card.accent-green {
+            border-left: 5px solid #34d399;
+        }
+        .card.accent-blue {
+            border-left: 5px solid #60a5fa;
+        }
+        .card.accent-purple {
+            border-left: 5px solid #a78bfa;
+        }
+        .card.accent-orange {
+            border-left: 5px solid #fb923c;
+        }
+
+        /* --- Panel (two columns) --- */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .panel {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 22px 24px;
+            border: 1px solid #e9edf2;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .panel h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel h3 .badge {
+            font-size: 0.7rem;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+
+        /* --- Table --- */
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            padding: 10px 6px 8px 0;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e9edf2;
+        }
+        td {
+            padding: 10px 6px 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-badge.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-badge.completed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* --- Clustering result (dummy visual) --- */
+        .cluster-visual {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .cluster-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 12px 16px;
+            flex: 1 0 calc(50% - 12px);
+            border: 1px solid #e9edf2;
+        }
+        .cluster-item .name {
+            font-weight: 600;
+        }
+        .cluster-item .detail {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .cluster-item .bar {
+            margin-top: 8px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .cluster-item .bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            background: #34d399;
+        }
+        .cluster-item .bar .fill.blue {
+            background: #60a5fa;
+        }
+        .cluster-item .bar .fill.purple {
+            background: #a78bfa;
+        }
+        .cluster-item .bar .fill.orange {
+            background: #fb923c;
+        }
+
+        /* --- Tech Stack --- */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            margin: 12px 0 4px;
+        }
+        .tech-stack .badge {
+            background: #f1f5f9;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+        .tech-stack .badge.green {
+            background: #d1fae5;
+            border-color: #34d399;
+            color: #065f46;
+        }
+
+        /* --- Footer --- */
+        .main-footer {
+            margin-top: 32px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            border-top: 1px solid #e9edf2;
+            padding-top: 24px;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 900px) {
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+            .main {
+                padding: 20px;
+                max-width: 100%;
+            }
+            .sidebar {
+                width: 200px;
+                padding: 16px 12px;
+            }
+            .sidebar .logo {
+                font-size: 1.2rem;
+            }
+        }
+        @media (max-width: 640px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 12px 16px;
+                gap: 8px;
+            }
+            .sidebar .logo {
+                border-bottom: none;
+                padding-bottom: 0;
+                margin-bottom: 0;
+                width: 100%;
+            }
+            .sidebar nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .sidebar nav a {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            .sidebar .footer-nav {
+                display: none;
+            }
+            .main {
+                max-width: 100%;
+                padding: 16px;
+            }
+            .cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            .header h1 small {
+                display: block;
+                margin-left: 0;
+                font-size: 0.85rem;
+            }
+        }
+        @media (max-width: 420px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+            .cluster-item {
+                flex: 1 0 100%;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Tahfizh Dashboard</h1>
-    <p>Sistem pengelompokan halaqoh otomatis berbasis web.</p>
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar">
+        <div class="logo">📖 <span>Tahfizh</span>Dash</div>
+        <nav>
+            <a href="#" class="active"><span class="icon">📊</span> Dashboard</a>
+            <a href="#"><span class="icon">👥</span> Halaqoh</a>
+            <a href="#"><span class="icon">🧩</span> Clustering</a>
+            <a href="#"><span class="icon">📋</span> Laporan</a>
+            <a href="#"><span class="icon">⚙️</span> Pengaturan</a>
+        </nav>
+        <div class="footer-nav">
+            <div style="margin-bottom:4px;">v2.0.0 · statis</div>
+            <div style="font-size:0.75rem; color:#475569;">© 2026 ryres</div>
+        </div>
+    </aside>
 
-    <div class="tech-stack">
-        <span class="badge">Node.js</span>
-        <span class="badge">Express</span>
-        <span class="badge">MySQL</span>
-        <span class="badge">MVC Architecture</span>
-    </div>
+    <!-- ========== MAIN ========== -->
+    <main class="main">
 
-    <div class="feature-card">
-        <h3>Algoritma Clustering</h3>
-        <p>Proyek ini mengimplementasikan <strong>K-Means Clustering</strong> untuk mengorganisir data halaqoh dengan parameter optimasi:</p>
-        <ul>
-            <li><strong>Manhattan Distance:</strong> Digunakan untuk menghitung kedekatan antar data tahfizh.</li>
-            <li><strong>Silhouette Score:</strong> Digunakan untuk validasi dan penentuan jumlah cluster terbaik.</li>
-        </ul>
-    </div>
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                Dashboard
+                <small>Halaqoh Clustering</small>
+            </h1>
+            <div class="header-right">
+                <span class="date-badge" id="dateDisplay"></span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
 
-    <h3>Informasi Proyek</h3>
-    <p>Versi asli aplikasi ini menggunakan database <code>tahfizh</code> dan memerlukan konfigurasi file <code>.env</code> untuk berjalan secara penuh [1]. Halaman ini adalah representasi statis untuk keperluan dokumentasi di GitHub Pages.</p>
-    
-    <div style="background: #fff3e0; padding: 10px; border-radius: 5px; border: 1px solid #ffe0b2;">
-        <strong>Catatan Pengembang:</strong> Pastikan untuk mengabaikan folder <code>node_modules</code> dan file <code>.env</code> dalam produksi sebenarnya untuk menjaga keamanan data [3].
-    </div>
-</div>
+        <!-- Cards -->
+        <div class="cards">
+            <div class="card accent-green">
+                <div class="label">Total Santri</div>
+                <div class="value">1.284</div>
+                <div class="trend">▲ +12% bulan ini</div>
+            </div>
+            <div class="card accent-blue">
+                <div class="label">Halaqoh Aktif</div>
+                <div class="value">47</div>
+                <div class="trend">▲ +3 minggu lalu</div>
+            </div>
+            <div class="card accent-purple">
+                <div class="label">Cluster Terbentuk</div>
+                <div class="value">8</div>
+                <div class="trend">◆ K-Means (Manhattan)</div>
+            </div>
+            <div class="card accent-orange">
+                <div class="label">Silhouette Score</div>
+                <div class="value">0.74</div>
+                <div class="trend">⬆ optimal &gt; 0.6</div>
+            </div>
+        </div>
 
-<footer>
-    <p>&copy; 2026 ryres - Halaqohv2 Project</p>
-</footer>
+        <!-- Panel Grid -->
+        <div class="panel-grid">
+
+            <!-- Tabel Halaqoh -->
+            <div class="panel">
+                <h3>📌 Daftar Halaqoh <span class="badge">aktif</span></h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Cluster</th>
+                                <th>Jumlah</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Halaqoh Al-Furqan</strong></td>
+                                <td>C-1</td>
+                                <td>22</td>
+                                <td><span class="status-badge active">Aktif</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Halaqoh An-Nur</strong></td>
+                                <td>C-2</td>
+                                <td>18</td>
+                                <td><span class="status-badge active">Aktif</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Halaqoh Al-Hikmah</strong></td>
+                                <td>C-1</td>
+                                <td>15</td>
+                                <td><span class="status-badge pending">Pending</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Halaqoh Al-Bayan</strong></td>
+                                <td>C-3</td>
+                                <td>20</td>
+                                <td><span class="status-badge completed">Selesai</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Halaqoh Ar-Rahman</strong></td>
+                                <td>C-2</td>
+                                <td>24</td>
+                                <td><span class="status-badge active">Aktif</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px; font-size:0.85rem; color:#64748b;">
+                    Menampilkan 5 dari 47 halaqoh
+                </div>
+            </div>
+
+            <!-- Hasil Clustering -->
+            <div class="panel">
+                <h3>🧩 Hasil Clustering <span class="badge">K-Means</span></h3>
+                <p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">
+                    Manhattan Distance · Silhouette Score: <strong>0.74</strong>
+                </p>
+                <div class="cluster-visual">
+                    <div class="cluster-item">
+                        <div class="name">Cluster 1</div>
+                        <div class="detail">12 halaqoh · 312 santri</div>
+                        <div class="bar"><div class="fill" style="width:78%;"></div></div>
+                    </div>
+                    <div class="cluster-item">
+                        <div class="name">Cluster 2</div>
+                        <div class="detail">10 halaqoh · 284 santri</div>
+                        <div class="bar"><div class="fill blue" style="width:65%;"></div></div>
+                    </div>
+                    <div class="cluster-item">
+                        <div class="name">Cluster 3</div>
+                        <div class="detail">9 halaqoh · 240 santri</div>
+                        <div class="bar"><div class="fill purple" style="width:55%;"></div></div>
+                    </div>
+                    <div class="cluster-item">
+                        <div class="name">Cluster 4</div>
+                        <div class="detail">8 halaqoh · 198 santri</div>
+                        <div class="bar"><div class="fill orange" style="width:45%;"></div></div>
+                    </div>
+                </div>
+                <div style="margin-top:14px; font-size:0.85rem; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #e9edf2;">
+                    <strong>📐 Metrik:</strong> Manhattan Distance · Silhouette Score terbaik di k=4
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Stack & Info -->
+        <div style="background:#ffffff; border-radius:16px; padding:20px 24px; border:1px solid #e9edf2; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                    <h3 style="font-size:1rem; font-weight:600; margin-bottom:4px;">⚙️ Tech Stack</h3>
+                    <div class="tech-stack">
+                        <span class="badge green">Node.js</span>
+                        <span class="badge green">Express</span>
+                        <span class="badge green">MySQL</span>
+                        <span class="badge green">MVC</span>
+                        <span class="badge">K-Means</span>
+                        <span class="badge">Manhattan Distance</span>
+                        <span class="badge">Silhouette Score</span>
+                    </div>
+                </div>
+                <div style="font-size:0.85rem; color:#64748b; text-align:right;">
+                    <div>📌 Versi asli menggunakan database <code style="background:#f1f5f9; padding:2px 8px; border-radius:4px;">tahfizh</code></div>
+                    <div style="margin-top:2px;">🔒 Abaikan <code style="background:#f1f5f9; padding:2px 8px; border-radius:4px;">node_modules</code> &amp; <code style="background:#f1f5f9; padding:2px 8px; border-radius:4px;">.env</code> di produksi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="main-footer">
+            <p>Halaman statis untuk keperluan dokumentasi · <a href="https://github.com/ryres/halaqohv2" target="_blank" style="color:#34d399; text-decoration:none;">GitHub</a></p>
+        </div>
+
+    </main>
+
+    <script>
+        // Tampilkan tanggal hari ini
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('id-ID', options);
+        });
+    </script>
 
 </body>
 </html>
