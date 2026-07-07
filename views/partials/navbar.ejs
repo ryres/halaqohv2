@@ -1,0 +1,15 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <div class="container-fluid">
+    <button class="btn btn-primary" id="sidebarToggle">☰</button>
+    <div class="ms-auto">
+      <% if (session && session.userId) { %>
+        <span class="me-3 text-muted">Hello, <%= session.username %></span>
+        <form method="post" action="/logout" style="display:inline">
+          <button class="btn btn-outline-secondary btn-sm">Logout</button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="btn btn-primary">Login</a>
+      <% } %>
+    </div>
+  </div>
+</nav>

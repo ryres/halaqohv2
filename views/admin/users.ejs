@@ -1,0 +1,113 @@
+<div class="card">
+  <div class="card-header" style="background:#e74c3c; color:white;">
+    <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>Manajemen Users & Role</h5>
+  </div>
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-x-circle me-2"></i><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><%= success %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <button class="btn btn-danger btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="bi bi-plus me-1"></i>Tambah User
+    </button>
+
+    <div class="table-responsive">
+      <table class="table table-hover table-sm">
+        <thead style="background:#f8f9fa;">
+          <tr>
+            <th>No</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th>Ubah Role</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach((u, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><strong><%= u.username %></strong></td>
+              <td>
+                <% if (u.role === 'admin') { %>
+                  <span class="badge bg-danger">Admin</span>
+                <% } else if (u.role === 'guru_tahfizh') { %>
+                  <span class="badge bg-warning text-dark">Guru Tahfizh</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">User</span>
+                <% } %>
+              </td>
+              <td><small><%= new Date(u.created_at).toLocaleDateString('id-ID') %></small></td>
+              <td>
+                <% if (u.id !== session.userId) { %>
+                  <form method="post" action="/users/<%= u.id %>/role" style="display:flex; gap:4px; align-items:center;">
+                    <select name="role" class="form-select form-select-sm" style="width:auto;">
+                      <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>User</option>
+                      <option value="guru_tahfizh" <%= u.role === 'guru_tahfizh' ? 'selected' : '' %>>Guru Tahfizh</option>
+                      <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-check"></i></button>
+                  </form>
+                <% } else { %>
+                  <span class="badge bg-info">Akun Anda</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (u.id !== session.userId) { %>
+                  <form method="post" action="/users/<%= u.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus user <%= u.username %>?')">
+                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Hapus</button>
+                  </form>
+                <% } else { %>
+                  <span class="text-muted small">-</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (users.length === 0) { %>
+            <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Belum ada user</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tambah User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/users">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-control" required>
+              <option value="user">User</option>
+              <option value="guru_tahfizh">Guru Tahfizh</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-danger">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

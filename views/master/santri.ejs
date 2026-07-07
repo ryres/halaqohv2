@@ -1,0 +1,180 @@
+<div class="card">
+  <div class="card-header" style="background:var(--primary); color:white;">
+    <h5 class="mb-0"><i class="bi bi-people me-2"></i>Manajemen Santri</h5>
+  </div>
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-x-circle me-2"></i><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><%= success %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSantriModal">
+        <i class="bi bi-plus me-1"></i>Tambah Santri
+      </button>
+      <span class="text-muted small"><%= santris.length %> data ditampilkan</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover table-sm">
+        <thead style="background:#f8f9fa;">
+          <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>Kelas</th>
+            <th>Juz/Surat</th>
+            <th>Tajwid</th>
+            <th>Kelancaran</th>
+            <th>Makhraj</th>
+            <th>Halaqoh</th>
+            <th>Guru</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% santris.forEach((s, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><strong><%= s.nama %></strong></td>
+              <td><%= s.kelas || '-' %></td>
+              <td><%= s.juz || 0 %>/<%= s.surat || '-' %></td>
+              <td><%= s.tajwid || '-' %></td>
+              <td><%= s.kelancaran || '-' %></td>
+              <td><%= s.makhraj || '-' %></td>
+              <td><span class="badge bg-info"><%= s.halaqoh_nama || 'N/A' %></span></td>
+              <td><small><%= s.guru_nama || '-' %></small></td>
+              <td>
+                <a href="/santri/<%= s.id %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                <form method="post" action="/santri/<%= s.id %>/delete" style="display:inline;" onsubmit="return confirm('Buat request penghapusan santri ini?')">
+                  <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-trash"></i> Hapus</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (santris.length === 0) { %>
+            <tr><td colspan="10" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Belum ada data santri</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <nav aria-label="Page navigation" class="mt-3">
+        <ul class="pagination justify-content-center">
+          <li class="page-item <% if (currentPage === 1) { %>disabled<% } %>">
+            <a class="page-link" href="/santri?page=<%= currentPage - 1 %>">Previous</a>
+          </li>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <% if (currentPage === i) { %>active<% } %>">
+              <a class="page-link" href="/santri?page=<%= i %>"><%= i %></a>
+            </li>
+          <% } %>
+          <li class="page-item <% if (currentPage === totalPages) { %>disabled<% } %>">
+            <a class="page-link" href="/santri?page=<%= currentPage + 1 %>">Next</a>
+          </li>
+        </ul>
+      </nav>
+    <% } %>
+  </div>
+</div>
+
+<!-- Modal Tambah Santri -->
+<div class="modal fade" id="addSantriModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Tambah Santri</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/santri" onsubmit="return validateSantriForm(this)">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nama</label>
+              <input type="text" name="nama" class="form-control" required />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Kelas</label>
+              <input type="text" name="kelas" class="form-control" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Juz</label>
+              <input type="number" name="juz" class="form-control" min="0" max="30" />
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Surat</label>
+              <input type="text" name="surat" class="form-control" />
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Ayat</label>
+              <input type="number" name="ayat" class="form-control" min="0" />
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Target Juz</label>
+              <input type="number" name="target_juz" class="form-control" value="30" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Tajwid (0-100)</label>
+              <input type="number" name="tajwid" class="form-control" min="0" max="100" />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Kelancaran (0-100)</label>
+              <input type="number" name="kelancaran" class="form-control" min="0" max="100" />
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Makhraj (0-100)</label>
+              <input type="number" name="makhraj" class="form-control" min="0" max="100" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Halaqoh</label>
+              <select name="halaqoh_id" class="form-control">
+                <option value="">-- Pilih Halaqoh --</option>
+                <% halaqohs.forEach(h => { %>
+                  <option value="<%= h.id %>"><%= h.nama_halaqoh %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Guru</label>
+              <select name="guru_id" class="form-control">
+                <option value="">-- Pilih Guru --</option>
+                <% gurus.forEach(g => { %>
+                  <option value="<%= g.id %>"><%= g.nama %></option>
+                <% }); %>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+        <script>
+        function validateSantriForm(form) {
+          const toInt = (v) => { const n = parseInt(v,10); return Number.isNaN(n) ? null : n; };
+          const juz = toInt(form.juz && form.juz.value);
+          const ayat = toInt(form.ayat && form.ayat.value);
+          const tajwid = toInt(form.tajwid && form.tajwid.value);
+          const kelancaran = toInt(form.kelancaran && form.kelancaran.value);
+          const makhraj = toInt(form.makhraj && form.makhraj.value);
+
+          if (juz !== null && (juz < 0 || juz > 30)) { alert('Nilai Juz harus antara 0 dan 30'); return false; }
+          if (ayat !== null && ayat < 0) { alert('Nilai Ayat tidak valid'); return false; }
+          const invalid100 = v => v !== null && (v < 0 || v > 100);
+          if (invalid100(tajwid) || invalid100(kelancaran) || invalid100(makhraj)) { alert('Nilai Tajwid/Kelancaran/Makhraj harus antara 0 dan 100'); return false; }
+          return true;
+        }
+        </script>

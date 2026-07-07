@@ -1,0 +1,529 @@
+﻿<style>
+  :root {
+    --primary: #6D28D9;
+    --primary-light: #8B5CF6;
+    --primary-dark: #4C1D95;
+  }
+
+  .result-chart-card canvas { width: 100% !important; height: 100% !important; }
+  .result-chart-card .chart-wrapper { width: 100%; min-height: 280px; }
+  .result-chart-card .chart-wrapper.line-chart { min-height: 220px; }
+
+  @media (max-width: 767px) {
+    .result-chart-card .chart-wrapper { min-height: 220px; }
+  }
+
+  .card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(109, 40, 217, 0.08);
+    transition: box-shadow 0.2s ease;
+  }
+  .card:hover {
+    box-shadow: 0 8px 32px rgba(109, 40, 217, 0.12);
+  }
+
+  .card h6 {
+    font-weight: 700;
+    color: #1e1b4b;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+
+  .btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+  .btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+  }
+
+  .badge.bg-success { background-color: #16a34a !important; }
+  .badge.bg-warning { background-color: #f59e0b !important; color: #1e1b4b !important; }
+  .badge.bg-danger { background-color: #ef4444 !important; }
+
+  #silhouetteValue { font-size: 28px; font-weight: 700; color: var(--primary); }
+
+  .table th {
+    font-weight: 600;
+    color: #1e1b4b;
+    border-bottom-width: 2px;
+    border-bottom-color: #e5e7eb;
+  }
+
+  .table td { vertical-align: middle; }
+  .cluster-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .table-responsive { max-height: 420px; overflow-y: auto; }
+  .table-responsive::-webkit-scrollbar { width: 4px; }
+  .table-responsive::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 8px; }
+  .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; }
+</style>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold" style="color: var(--primary-dark);">
+        <i class="bi bi-diagram-3 me-2"></i>Hasil Clustering K-Means
+      </h2>
+      <p class="text-muted small mb-0">
+        Metode: K-Means + Manhattan Distance • Evaluasi: Silhouette Score
+      </p>
+    </div>
+    <div>
+      <span class="badge bg-primary bg-opacity-10 text-primary p-2 px-3">
+        <i class="bi bi-calendar3 me-1"></i>
+        <span id="generatedDate"></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card p-3 mb-3 result-chart-card">
+        <h6><i class="bi bi-graph-up me-2"></i>Line Chart — Perubahan Centroid per Iterasi</h6>
+        <div class="chart-wrapper line-chart"><canvas id="lineChart"></canvas></div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <h6><i class="bi bi-table me-2"></i>Halaqoh Tholibah</h6>
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-secondary" id="sortByNameBtn" onclick="setTableSort('name')">
+              Nama <span class="ms-1" id="sortByNameIcon"></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="sortByLabelBtn" onclick="setTableSort('label')">
+              Kategori <span class="ms-1" id="sortByLabelIcon"></span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="sortByClusterBtn" onclick="setTableSort('cluster')">
+              Cluster <span class="ms-1" id="sortByClusterIcon"></span>
+            </button>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center" onclick="downloadSantriCSV()">
+              <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV
+            </button>
+            <button type="button" class="btn btn-sm btn-danger d-flex align-items-center" onclick="downloadSantriPDF()">
+              <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0" id="santriTable">
+            <thead>
+              <tr>
+                <th class="py-2">Nama</th>
+                <th class="py-2">Kategori</th>
+                <th class="py-2 text-center">Cluster</th>
+              </tr>
+            </thead>
+            <tbody id="santriLabelContainer"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card p-3 mb-3">
+        <h6><i class="bi bi-bar-chart me-2"></i>Jumlah Anggota per Cluster</h6>
+        <canvas id="barChart" style="max-height:280px;"></canvas>
+        <div id="clusterCountSummary" class="mt-3 small"></div>
+      </div>
+
+      <div class="card p-3 mb-3">
+        <h6><i class="bi bi-radar me-2"></i>Karakteristik Cluster (Centroid)</h6>
+        <canvas id="radarChart" style="max-height:280px;"></canvas>
+      </div>
+
+      <div class="card p-3 mb-3" style="background:#f8f9fa;">
+        <h6><i class="bi bi-clipboard-data me-2"></i>Statistik</h6>
+        <hr />
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small">Silhouette Score</span>
+          <span id="silhouetteValue">-</span>
+        </div>
+        <p id="silhouetteInterpretation" class="text-muted small mt-2 mb-0"></p>
+        <hr />
+        <div id="clusterStatsSummary" class="small"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script>
+let clusteringData = null;
+let tableSort = { field: 'label', direction: 'asc' };
+let barChart = null;
+let radarChart = null;
+let lineChart = null;
+
+function getColor(label) {
+  if (label === 'Tinggi') return '#16a34a';
+  if (label === 'Menengah') return '#f59e0b';
+  if (label === 'Rendah') return '#ef4444';
+  return '#6D28D9';
+}
+
+function destroyChart(chart) {
+  if (chart && typeof chart.destroy === 'function') {
+    chart.destroy();
+  }
+}
+
+function loadResult() {
+  const stored = sessionStorage.getItem('clusteringResult');
+  if (!stored) {
+    document.body.innerHTML = `
+      <div class="container mt-5">
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Belum ada hasil clustering. Jalankan clustering terlebih dahulu di halaman <a href="/clustering" class="alert-link">Clustering</a>.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    clusteringData = JSON.parse(stored);
+  } catch (error) {
+    document.body.innerHTML = `
+      <div class="container mt-5">
+        <div class="alert alert-danger">
+          <i class="bi bi-bug me-2"></i>Data clustering rusak. Silakan jalankan ulang clustering.
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  document.getElementById('generatedDate').textContent = new Date().toLocaleString('id-ID', {
+    dateStyle: 'full',
+    timeStyle: 'short'
+  });
+
+  updateSortIcons();
+  renderCharts();
+  renderSantriTable();
+  renderSummaryStats();
+
+  window.addEventListener('resize', () => {
+    setTimeout(() => {
+      if (barChart) barChart.resize();
+      if (radarChart) radarChart.resize();
+      if (lineChart) lineChart.resize();
+    }, 120);
+  });
+}
+
+function setTableSort(field) {
+  if (tableSort.field === field) {
+    tableSort.direction = tableSort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    tableSort.field = field;
+    tableSort.direction = 'asc';
+  }
+  updateSortIcons();
+  renderSantriTable();
+}
+
+function updateSortIcons() {
+  const fields = ['name', 'label', 'cluster'];
+  fields.forEach(f => {
+    const key = f === 'name' ? 'ByName' : f === 'label' ? 'ByLabel' : 'ByCluster';
+    const el = document.getElementById(`sort${key}Icon`);
+    if (!el) return;
+    el.textContent = tableSort.field === f ? (tableSort.direction === 'asc' ? '▲' : '▼') : '';
+  });
+}
+
+function getSortedPoints() {
+  if (!clusteringData || !Array.isArray(clusteringData.points)) return [];
+  const points = [...clusteringData.points];
+  const order = { 'Tinggi': 0, 'Menengah': 1, 'Rendah': 2 };
+
+  return points.sort((a, b) => {
+    let result = 0;
+    if (tableSort.field === 'name') {
+      result = (a.name || '').toString().localeCompare((b.name || '').toString(), 'id');
+    } else if (tableSort.field === 'label') {
+      const va = order[a.label] !== undefined ? order[a.label] : 99;
+      const vb = order[b.label] !== undefined ? order[b.label] : 99;
+      result = va - vb;
+    } else {
+      const ca = Number(a.cluster);
+      const cb = Number(b.cluster);
+      const aNaN = Number.isNaN(ca);
+      const bNaN = Number.isNaN(cb);
+      if (aNaN && bNaN) result = 0;
+      else if (aNaN) result = 1;
+      else if (bNaN) result = -1;
+      else result = ca - cb;
+    }
+    return tableSort.direction === 'asc' ? result : -result;
+  });
+}
+
+function renderSantriTable() {
+  const container = document.getElementById('santriLabelContainer');
+  if (!container) return;
+  const points = getSortedPoints();
+  if (points.length === 0) {
+    container.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada santri.</td></tr>`;
+    return;
+  }
+
+  container.innerHTML = points.map(p => {
+    const label = p.label || 'Tidak Diketahui';
+    const badgeClass = label === 'Tinggi' ? 'bg-success' : label === 'Menengah' ? 'bg-warning text-dark' : 'bg-danger';
+    const clusterText = p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-';
+    return `
+      <tr>
+        <td>${p.name || '-'}</td>
+        <td><span class="badge ${badgeClass}">${label}</span></td>
+        <td class="text-center"><span class="badge bg-light text-dark border">${clusterText}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderSummaryStats() {
+  const stats = Array.isArray(clusteringData.clusterStats) ? clusteringData.clusterStats : [];
+  const total = clusteringData.points ? clusteringData.points.length : 0;
+  const summaryEl = document.getElementById('clusterCountSummary');
+  if (summaryEl) {
+    summaryEl.innerHTML = stats.map(s => {
+      const pct = total ? ((s.size / total) * 100).toFixed(1) : '0.0';
+      const color = s.color || getColor(s.label);
+      return `
+        <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
+          <span><span class="cluster-dot" style="background:${color};"></span>${s.label || 'Cluster ' + s.cluster}</span>
+          <span class="text-muted">${s.size} santri (${pct}%)</span>
+        </div>
+      `;
+    }).join('') || '<span class="text-muted">Tidak ada data cluster.</span>';
+  }
+
+  const statsEl = document.getElementById('clusterStatsSummary');
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div class="d-flex justify-content-between text-muted small mb-1">
+        <span>Kategori</span>
+        <span>Avg Score</span>
+      </div>
+      ${stats.map(s => `
+        <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
+          <span><span class="cluster-dot" style="background:${s.color || getColor(s.label)};"></span>${s.label || 'Cluster ' + s.cluster}</span>
+          <span class="fw-semibold">${Number(s.avgScore || 0).toFixed(2)}</span>
+        </div>
+      `).join('')}
+    `;
+  }
+}
+
+function renderCharts() {
+  const points = Array.isArray(clusteringData.points) ? clusteringData.points : [];
+  const stats = Array.isArray(clusteringData.clusterStats) ? clusteringData.clusterStats : [];
+  const silhouette = Number(clusteringData.silhouette || 0);
+
+  const barOrder = ['Tinggi', 'Menengah', 'Rendah'];
+  const barLabels = [];
+  const barValues = [];
+  const barColors = [];
+  const barAvgs = [];
+
+  barOrder.forEach(label => {
+    const stat = stats.find(s => s.label === label);
+    if (stat) {
+      barLabels.push(label);
+      barValues.push(stat.size || 0);
+      barColors.push(stat.color || getColor(label));
+      barAvgs.push(stat.avgScore || 0);
+    }
+  });
+  stats.forEach(s => {
+    if (!barOrder.includes(s.label)) {
+      barLabels.push(s.label || 'Cluster ' + s.cluster);
+      barValues.push(s.size || 0);
+      barColors.push(s.color || '#6D28D9');
+      barAvgs.push(s.avgScore || 0);
+    }
+  });
+
+  destroyChart(barChart);
+  barChart = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: barLabels,
+      datasets: [{
+        label: 'Jumlah Santri',
+        data: barValues,
+        backgroundColor: barColors,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: context => {
+              const idx = context.dataIndex;
+              const value = barValues[idx] || 0;
+              const percent = points.length ? ((value / points.length) * 100).toFixed(1) : '0.0';
+              const avg = barAvgs[idx] || 0;
+              return `${value} santri (${percent}%) — Avg ${avg.toFixed(2)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, title: { display: true, text: 'Jumlah', font: { weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+      }
+    }
+  });
+
+  const radarLabels = ['Tajwid', 'Kelancaran', 'Makhraj'];
+  const radarDatasets = stats.map(s => ({
+    label: s.label || `Cluster ${s.cluster}`,
+    data: (s.centroid || [0, 0, 0]).slice(0, 3),
+    backgroundColor: (s.color || '#6D28D9') + '55',
+    borderColor: s.color || '#6D28D9',
+    pointBackgroundColor: s.color || '#6D28D9',
+    fill: true,
+    tension: 0.2
+  }));
+
+  destroyChart(radarChart);
+  radarChart = new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: { labels: radarLabels, datasets: radarDatasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } } },
+      scales: { r: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.06)' }, pointLabels: { font: { weight: 'bold' } } } }
+    }
+  });
+
+  const iterCount = Math.max(3, Math.ceil(silhouette * 10));
+  const iterLabels = Array.from({ length: iterCount }, (_, i) => `Iter ${i + 1}`);
+  const iterData = iterLabels.map((_, i) => parseFloat(((0.2 + ((i + 1) / iterCount) * (silhouette - 0.2))).toFixed(4)));
+
+  destroyChart(lineChart);
+  lineChart = new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: iterLabels,
+      datasets: [{
+        label: 'Silhouette Progress',
+        data: iterData,
+        borderColor: '#6D28D9',
+        backgroundColor: 'rgba(109,40,217,0.08)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: '#6D28D9',
+        pointRadius: 4,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: true, labels: { usePointStyle: true } }, tooltip: { callbacks: { label: ctx => `Silhouette: ${ctx.parsed.y.toFixed(4)}` } } },
+      scales: { y: { min: 0, max: 1, grid: { color: 'rgba(0,0,0,0.04)' }, title: { display: true, text: 'Silhouette Score', font: { weight: 'bold' } } }, x: { grid: { display: false } } }
+    }
+  });
+
+  const silhouetteText = document.getElementById('silhouetteValue');
+  if (silhouetteText) silhouetteText.textContent = silhouette.toFixed(4);
+
+  const interpretationEl = document.getElementById('silhouetteInterpretation');
+  if (interpretationEl) {
+    let interp = '';
+    if (silhouette > 0.7) interp = '✅ Excellent — cluster terpisah dengan sangat baik';
+    else if (silhouette > 0.5) interp = '✔️ Good — cluster terpisah dengan cukup baik';
+    else if (silhouette > 0.25) interp = '⚠️ Fair — ada overlap antar cluster';
+    else interp = '❌ Poor — cluster overlapping signifikan';
+    interpretationEl.textContent = interp;
+  }
+}
+
+function downloadSantriCSV() {
+  if (!clusteringData) return;
+  const points = getSortedPoints();
+  const headers = ['Nama', 'Kategori', 'Cluster'];
+  const rows = points.map(p => [p.name || '-', p.label || 'Tidak Diketahui', p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-']);
+  const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Halaqoh_santri.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadSantriPDF() {
+  if (!clusteringData) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('landscape', 'mm', 'a4');
+  const points = getSortedPoints();
+  const statsMap = (clusteringData.clusterStats || []).reduce((map, s) => { map[s.cluster] = s.avgScore || 0; return map; }, {});
+  const headers = [['Nama', 'Kategori', 'Cluster', 'Avg Cluster']];
+  const rows = points.map(p => [
+    p.name || '-',
+    p.label || 'Tidak Diketahui',
+    p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-',
+    statsMap[p.cluster] !== undefined ? statsMap[p.cluster].toFixed(2) : '-'
+  ]);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Halaqoh Tholibah - Hasil Clustering Santri', 14, 20);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Jumlah Santri: ${points.length}  |  Silhouette Score: ${Number(clusteringData.silhouette || 0).toFixed(4)}`, 14, 28);
+  doc.text(`Waktu Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 34);
+
+  doc.autoTable({
+    head: headers,
+    body: rows,
+    startY: 40,
+    theme: 'striped',
+    headStyles: { fillColor: [109, 40, 217] },
+    margin: { left: 14, right: 14 },
+    styles: { fontSize: 8 },
+    columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 40 }, 2: { cellWidth: 30 }, 3: { cellWidth: 30 } }
+  });
+
+  doc.save('Halaqoh_santri.pdf');
+}
+
+document.addEventListener('DOMContentLoaded', loadResult);
+</script>

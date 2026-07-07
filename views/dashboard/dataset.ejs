@@ -1,0 +1,147 @@
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<div class="row mb-4">
+  <div class="col-md-7 mb-3">
+    <div class="card p-4 h-100 border-0 shadow-sm" style="border-radius:16px;">
+      <h5 class="d-flex align-items-center fw-bold" style="color:var(--primary);"><i class="bi bi-file-earmark-arrow-up me-2"></i>Import Dataset Santri</h5>
+      <p class="text-muted small">Unggah file CSV atau Excel (.xlsx) untuk menambahkan santri dalam jumlah banyak sekaligus.</p>
+      <hr>
+      <form action="/dataset/import" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="importFile" class="form-label fw-semibold">Pilih File (CSV / XLSX)</label>
+          <div class="input-group">
+            <input type="file" name="file" class="form-control" id="importFile" accept=".csv, .xlsx, .xls" required>
+            <button class="btn btn-primary d-flex align-items-center" type="submit">
+              <i class="bi bi-cloud-upload me-2"></i> Upload
+            </button>
+          </div>
+        </div>
+      </form>
+      <% if (session && ['admin', 'guru_tahfizh'].includes(session.role)) { %>
+      <hr>
+      <form action="/dataset/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus semua dataset santri? Tindakan ini tidak dapat dibatalkan.');">
+        <button type="submit" class="btn btn-danger w-100 d-flex justify-content-center align-items-center">
+          <i class="bi bi-trash me-2"></i> Hapus Semua Dataset
+        </button>
+      </form>
+      <% } %>
+    </div>
+  </div>
+  <div class="col-md-5 mb-3">
+    <div class="card p-4 h-100 border-0 shadow-sm" style="border-radius:16px;">
+      <h6 class="fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>Panduan Format Kolom</h6>
+      <p class="mb-2"><a href="/sample_dataset.csv" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Unduh Contoh File</a></p>
+      <div class="text-muted small" style="line-height: 1.6;">
+        Kolom yang didukung (tidak sensitif huruf besar/kecil):
+        <ul class="mb-0 ps-3">
+          <li><strong>Nama</strong> (Wajib)</li>
+          <li><strong>Kelas</strong></li>
+          <li><strong>Juz</strong>, <strong>Surat</strong>, <strong>Ayat</strong></li>
+          <li><strong>Tajwid</strong>, <strong>Kelancaran</strong>, <strong>Makhraj</strong> (Nilai 0-100)</li>
+          <li><strong>Halaqoh</strong> / <strong>Halaqoh ID</strong> (Bisa nama halaqoh atau ID)</li>
+          <li><strong>Guru</strong> / <strong>Guru ID</strong> (Bisa nama guru atau ID)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card p-4">
+      <h5><i class="bi bi-table me-2"></i>Dataset Santri</h5>
+      <hr>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover" id="santriTable">
+          <thead style="background-color:var(--primary); color:white;">
+            <tr>
+              <th>No</th>
+              <th>Nama</th>
+              <th>Kelas</th>
+              <th>Juz</th>
+              <th>Surat</th>
+              <th>Ayat</th>
+              <th>Tajwid</th>
+              <th>Kelancaran</th>
+              <th>Makhraj</th>
+              <th>Rata-rata</th>
+            </tr>
+          </thead>
+          <tbody id="santriBody">
+            <tr>
+              <td colspan="10" class="text-center text-muted">Loading data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <nav>
+        <ul class="pagination" id="pagination">
+          <li class="page-item"><a class="page-link" href="#" onclick="loadPage(1)">First</a></li>
+          <li class="page-item"><a class="page-link" href="#" onclick="prevPage()">Prev</a></li>
+          <li class="page-item active"><span class="page-link">Page <span id="currentPage">1</span></span></li>
+          <li class="page-item"><a class="page-link" href="#" onclick="nextPage()">Next</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+let totalPages = 1;
+
+async function loadSantri(page = 1) {
+  try {
+    const res = await fetch(`/api/santri?page=${page}&limit=10`);
+    const data = await res.json();
+    const tbody = document.getElementById('santriBody');
+    tbody.innerHTML = '';
+    
+    if (data.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No data available</td></tr>';
+      return;
+    }
+
+    data.data.forEach((santri, idx) => {
+      const avgScore = santri.avg_score !== undefined && santri.avg_score !== null ? Math.round(Number(santri.avg_score)) : '';
+      const row = `<tr>
+        <td>${(page - 1) * 10 + idx + 1}</td>
+        <td>${santri.nama || ''}</td>
+        <td>${santri.kelas || ''}</td>
+        <td>${santri.juz || 0}</td>
+        <td>${santri.surat || ''}</td>
+        <td>${santri.ayat || 0}</td>
+        <td>${santri.tajwid || 0}</td>
+        <td>${santri.kelancaran || 0}</td>
+        <td>${santri.makhraj || 0}</td>
+        <td>${avgScore}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+
+    currentPage = page;
+    totalPages = Math.ceil(data.meta.total / data.meta.limit);
+    document.getElementById('currentPage').innerText = page;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function loadPage(p) { loadSantri(p); }
+function prevPage() { if (currentPage > 1) loadSantri(currentPage - 1); }
+function nextPage() { if (currentPage < totalPages) loadSantri(currentPage + 1); }
+
+loadSantri(1);
+</script>

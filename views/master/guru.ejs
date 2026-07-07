@@ -1,0 +1,82 @@
+<div class="card">
+  <div class="card-header" style="background:var(--primary); color:white;">
+    <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Manajemen Guru</h5>
+  </div>
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-x-circle me-2"></i><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><%= success %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <button class="btn btn-primary btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#addGuruModal">
+      <i class="bi bi-plus me-1"></i>Tambah Guru
+    </button>
+
+    <div class="table-responsive">
+      <table class="table table-hover table-sm">
+        <thead style="background:#f8f9fa;">
+          <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>Jabatan</th>
+            <th>Unit</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% gurus.forEach((guru, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><strong><%= guru.nama %></strong></td>
+              <td><%= guru.jabatan %></td>
+              <td><%= guru.unit %></td>
+              <td>
+                <a href="/guru/<%= guru.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
+                <form method="post" action="/guru/<%= guru.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
+                  <button class="btn btn-outline-danger btn-sm">Hapus</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (gurus.length === 0) { %>
+            <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Belum ada data guru</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addGuruModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tambah Guru</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/guru">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nama</label>
+            <input type="text" name="nama" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Jabatan</label>
+            <input type="text" name="jabatan" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Unit</label>
+            <input type="text" name="unit" class="form-control" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

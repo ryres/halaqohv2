@@ -1,0 +1,80 @@
+<div class="card max-width-800 mx-auto">
+  <div class="card-header" style="background:var(--primary); color:white;">
+    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Santri: <%= santri.nama %></h5>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/santri/<%= santri.id %>">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-semibold">Nama</label>
+          <input type="text" name="nama" class="form-control" value="<%= santri.nama %>" required />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-semibold">Kelas</label>
+          <input type="text" name="kelas" class="form-control" value="<%= santri.kelas || '' %>" />
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          <label class="form-label fw-semibold">Juz</label>
+          <input type="number" name="juz" class="form-control" min="0" max="30" value="<%= santri.juz || 0 %>" />
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label fw-semibold">Surat</label>
+          <input type="text" name="surat" class="form-control" value="<%= santri.surat || '' %>" />
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label fw-semibold">Ayat</label>
+          <input type="number" name="ayat" class="form-control" min="0" value="<%= santri.ayat || 0 %>" />
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label fw-semibold">Target Juz</label>
+          <input type="number" name="target_juz" class="form-control" min="1" max="30" value="<%= santri.target_juz || 30 %>" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-semibold">Tajwid (0-100)</label>
+          <input type="number" name="tajwid" class="form-control" min="0" max="100" value="<%= santri.tajwid || 0 %>" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-semibold">Kelancaran (0-100)</label>
+          <input type="number" name="kelancaran" class="form-control" min="0" max="100" value="<%= santri.kelancaran || 0 %>" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-semibold">Makhraj (0-100)</label>
+          <input type="number" name="makhraj" class="form-control" min="0" max="100" value="<%= santri.makhraj || 0 %>" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-semibold">Halaqoh</label>
+          <select name="halaqoh_id" class="form-control">
+            <option value="">-- Pilih Halaqoh --</option>
+            <% halaqohs.forEach(h => { %>
+              <option value="<%= h.id %>" <%= santri.halaqoh_id == h.id ? 'selected' : '' %>><%= h.nama_halaqoh %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-semibold">Guru</label>
+          <select name="guru_id" class="form-control">
+            <option value="">-- Pilih Guru --</option>
+            <% gurus.forEach(g => { %>
+              <option value="<%= g.id %>" <%= santri.guru_id == g.id ? 'selected' : '' %>><%= g.nama %></option>
+            <% }); %>
+          </select>
+        </div>
+      </div>
+
+      <hr>
+      <div class="d-flex justify-content-end gap-2">
+        <a href="/santri" class="btn btn-secondary">Batal</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>

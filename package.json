@@ -1,0 +1,29 @@
+{
+  "name": "tahfizh-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard Pengelompokan Halaqoh Tahfizh - MVC Node.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.10.0",
+    "bcryptjs": "2.4.3",
+    "body-parser": "1.20.2",
+    "bootstrap": "5.3.0",
+    "chart.js": "4.3.0",
+    "dotenv": "16.3.1",
+    "ejs": "3.1.9",
+    "express": "4.18.2",
+    "express-ejs-layouts": "2.5.1",
+    "express-session": "1.17.3",
+    "multer": "^2.2.0",
+    "mysql2": "3.3.0",
+    "puppeteer": "^25.3.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.22"
+  }
+}

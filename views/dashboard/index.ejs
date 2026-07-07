@@ -1,0 +1,44 @@
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left: 4px solid var(--primary);">
+      <h6 class="text-muted">Total Santri</h6>
+      <h3 style="color:var(--primary);"><%= totalSantri %></h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left: 4px solid var(--primary-light);">
+      <h6 class="text-muted">Total Guru</h6>
+      <h3 style="color:var(--primary-light);"><%= totalGuru %></h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left: 4px solid var(--secondary);">
+      <h6 class="text-muted">Total Halaqoh</h6>
+      <h3 style="color:var(--secondary);"><%= totalHalaqoh %></h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3" style="border-left: 4px solid #F59E0B;">
+      <h6 class="text-muted">Delete Requests</h6>
+      <h3 style="color:#F59E0B;"><%= totalDeleteRequests %></h3>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card p-4">
+      <h5><i class="bi bi-book me-2"></i>Selamat Datang di Halaqoh Tahfizh Dashboard</h5>
+      <p class="text-muted mt-3">Dashboard ini digunakan untuk mengelola data santri, guru, halaqoh, serta melakukan analisis clustering performa hafalan menggunakan algoritma K-Means dengan Manhattan Distance.</p>
+      <div class="mt-4">
+        <h6>Fitur Utama:</h6>
+        <ul>
+          <li><strong>Dataset</strong> - Kelola dan lihat data santri</li>
+          <li><strong>Clustering</strong> - Jalankan algoritma K-Means</li>
+          <li><strong>Hasil</strong> - Lihat visualisasi cluster dan statistik Silhouette Score</li>
+          <li><strong>Laporan</strong> - Export hasil analisis</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

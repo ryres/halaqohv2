@@ -1,0 +1,64 @@
+<div class="card">
+  <div class="card-header" style="background:#f39c12; color:white;">
+    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Delete Requests</h5>
+  </div>
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-x-circle me-2"></i><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><%= success %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <div class="table-responsive">
+      <table class="table table-hover table-sm">
+        <thead style="background:#f8f9fa;">
+          <tr>
+            <th>No</th>
+            <th>Santri</th>
+            <th>Requested By</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% requests.forEach((req, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><strong><%= req.santri_nama || 'N/A' %></strong></td>
+              <td><%= req.requested_by_username || 'Unknown' %></td>
+              <td><small><%= req.reason || '-' %></small></td>
+              <td>
+                <% if (req.status === 'pending') { %>
+                  <span class="badge bg-warning">Pending</span>
+                <% } else if (req.status === 'approved') { %>
+                  <span class="badge bg-success">Approved</span>
+                <% } else if (req.status === 'rejected') { %>
+                  <span class="badge bg-danger">Rejected</span>
+                <% } else if (req.status === 'deleted') { %>
+                  <span class="badge bg-secondary">Deleted</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (req.status === 'pending') { %>
+                  <form method="post" action="/delete-requests/<%= req.id %>/approve" style="display:inline;" onsubmit="return confirm('Setujui penghapusan?')">
+                    <button class="btn btn-outline-success btn-sm">Approve</button>
+                  </form>
+                  <form method="post" action="/delete-requests/<%= req.id %>/reject" style="display:inline;" onsubmit="return confirm('Tolak request?')">
+                    <button class="btn btn-outline-danger btn-sm">Reject</button>
+                  </form>
+                <% } else { %>
+                  <span class="text-muted small">-</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (requests.length === 0) { %>
+            <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Tidak ada delete request</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,27 @@
+<div class="card max-width-600 mx-auto">
+  <div class="card-header" style="background:var(--primary); color:white;">
+    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Guru: <%= guru.nama %></h5>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/guru/<%= guru.id %>">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nama</label>
+        <input type="text" name="nama" class="form-control" value="<%= guru.nama %>" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Jabatan</label>
+        <input type="text" name="jabatan" class="form-control" value="<%= guru.jabatan || '' %>" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Unit</label>
+        <input type="text" name="unit" class="form-control" value="<%= guru.unit || '' %>" />
+      </div>
+      
+      <hr>
+      <div class="d-flex justify-content-end gap-2">
+        <a href="/guru" class="btn btn-secondary">Batal</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>

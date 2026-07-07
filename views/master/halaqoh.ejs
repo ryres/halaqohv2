@@ -1,0 +1,95 @@
+<div class="card">
+  <div class="card-header" style="background:var(--primary); color:white;">
+    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Manajemen Halaqoh</h5>
+  </div>
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-x-circle me-2"></i><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><%= success %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <% } %>
+
+    <button class="btn btn-primary btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#addHalaqohModal">
+      <i class="bi bi-plus me-1"></i>Tambah Halaqoh
+    </button>
+
+    <div class="table-responsive">
+      <table class="table table-hover table-sm">
+        <thead style="background:#f8f9fa;">
+          <tr>
+            <th>No</th>
+            <th>Nama Halaqoh</th>
+            <th>Guru</th>
+            <th>Ruangan</th>
+            <th>Jadwal</th>
+            <th>Jumlah Santri</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% halaqohs.forEach((h, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><strong><%= h.nama_halaqoh %></strong></td>
+              <td><%= h.guru_nama || '-' %></td>
+              <td><%= h.ruangan %></td>
+              <td><%= h.jadwal %></td>
+              <td><span class="badge bg-primary"><%= h.jumlah_santri %></span></td>
+              <td>
+                <a href="/halaqoh/<%= h.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
+                <form method="post" action="/halaqoh/<%= h.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
+                  <button class="btn btn-outline-danger btn-sm">Hapus</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+          <% if (halaqohs.length === 0) { %>
+            <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Belum ada data halaqoh</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addHalaqohModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tambah Halaqoh</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/halaqoh">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nama Halaqoh</label>
+            <input type="text" name="nama_halaqoh" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Guru</label>
+            <select name="guru_id" class="form-control">
+              <option value="">-- Pilih Guru --</option>
+              <% gurus.forEach(g => { %>
+                <option value="<%= g.id %>"><%= g.nama %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ruangan</label>
+            <input type="text" name="ruangan" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Jadwal</label>
+            <input type="text" name="jadwal" class="form-control" placeholder="Contoh: Senin 14:00-16:00" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

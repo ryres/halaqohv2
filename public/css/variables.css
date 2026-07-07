@@ -1,0 +1,14 @@
+:root {
+  --primary: #6D28D9;
+  --primary-light: #8B5CF6;
+  --primary-dark: #5B21B6;
+  --secondary: #A78BFA;
+  --bg-main: #F8F7FF;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+}
+
+body { background: var(--bg-main); color: var(--text-primary); font-family: 'Poppins', 'Segoe UI', sans-serif; }
+.card { background: var(--bg-card); border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }

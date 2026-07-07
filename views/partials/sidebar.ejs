@@ -1,0 +1,33 @@
+<div class="bg-white border-end" id="sidebar-wrapper" style="width:260px; min-height:100vh;">
+  <div class="sidebar-heading p-3" style="background:var(--primary); color:white; font-weight:700; border-bottom:1px solid #e0e0e0;">
+    <i class="bi bi-book me-2"></i>Tahfizh Dashboard
+  </div>
+  <div class="list-group list-group-flush">
+    <% if (session && session.userId) { %>
+      <!-- Main Menu -->
+      <div class="p-2 fw-700" style="color:var(--text-secondary); font-size:12px; text-transform:uppercase; border-top:1px solid #f0f0f0; margin-top:10px;">Menu Utama</div>
+      <a href="/" class="list-group-item list-group-item-action <% if (pathname === '/') { %>active<% } %>"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+      <a href="/dataset" class="list-group-item list-group-item-action <% if (pathname === '/dataset') { %>active<% } %>"><i class="bi bi-table me-2"></i>Dataset</a>
+      <a href="/clustering" class="list-group-item list-group-item-action <% if (pathname === '/clustering') { %>active<% } %>"><i class="bi bi-graph-up me-2"></i>Clustering</a>
+      <a href="/result" class="list-group-item list-group-item-action <% if (pathname === '/result') { %>active<% } %>"><i class="bi bi-pie-chart me-2"></i>Hasil Analisis</a>
+
+      <!-- Data Management -->
+      <div class="p-2 fw-700" style="color:var(--text-secondary); font-size:12px; text-transform:uppercase; border-top:1px solid #f0f0f0; margin-top:10px;">Manajemen Data</div>
+      <a href="/santri" class="list-group-item list-group-item-action <% if (pathname === '/santri') { %>active<% } %>"><i class="bi bi-people me-2"></i>Santri</a>
+      <a href="/guru" class="list-group-item list-group-item-action <% if (pathname === '/guru') { %>active<% } %>"><i class="bi bi-person-check me-2"></i>Guru</a>
+      <a href="/halaqoh" class="list-group-item list-group-item-action <% if (pathname === '/halaqoh') { %>active<% } %>"><i class="bi bi-building me-2"></i>Halaqoh</a>
+
+      <!-- Admin Menu -->
+      <% if (session.role === 'admin') { %>
+        <div class="p-2 fw-700" style="color:var(--text-secondary); font-size:12px; text-transform:uppercase; border-top:1px solid #f0f0f0; margin-top:10px; color:#e74c3c;">Administrasi</div>
+        <a href="/delete-requests" class="list-group-item list-group-item-action <% if (pathname === '/delete-requests') { %>active<% } %>"><i class="bi bi-trash me-2"></i>Delete Requests</a>
+        <a href="/users" class="list-group-item list-group-item-action <% if (pathname === '/users') { %>active<% } %>"><i class="bi bi-shield-lock me-2"></i>Users & Role</a>
+        <a href="/logs" class="list-group-item list-group-item-action <% if (pathname === '/logs') { %>active<% } %>"><i class="bi bi-clock-history me-2"></i>Audit Log</a>
+      <% } %>
+    <% } else { %>
+      <div class="p-3 text-center text-muted">
+        <p><a href="/login" class="btn btn-primary btn-sm">Login</a></p>
+      </div>
+    <% } %>
+  </div>
+</div>
