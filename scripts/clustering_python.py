@@ -2,10 +2,8 @@ import json
 import random
 import sys
 
-
 def manhattan_distance(a, b):
     return sum(abs(x - y) for x, y in zip(a, b))
-
 
 def random_centroids(data, k, seed=42):
     rng = random.Random(seed)
@@ -18,7 +16,6 @@ def random_centroids(data, k, seed=42):
         used_indexes.add(index)
         centroids.append(list(data[index]['features']))
     return centroids
-
 
 def assign_clusters(data, centroids):
     assignments = []
@@ -33,29 +30,33 @@ def assign_clusters(data, centroids):
         assignments.append(best_index)
     return assignments
 
-
 def update_centroids(data, assignments, k):
-    sums = [None] * k
-    counts = [0] * k
-
+    # Menggunakan MEDIAN untuk konsistensi matematis dengan jarak Manhattan (K-Medians)
+    dim = len(data[0]['features'])
+    clusters_features = [[] for _ in range(k)]
+    
     for point, assignment in zip(data, assignments):
-        if sums[assignment] is None:
-            sums[assignment] = [0.0] * len(point['features'])
-        for j, value in enumerate(point['features']):
-            sums[assignment][j] += value
-        counts[assignment] += 1
-
+        clusters_features[assignment].append(point['features'])
+        
     centroids = []
     for i in range(k):
-        if counts[i] == 0:
-            if sums[i] is None:
-                centroids.append([0.0] * len(data[0]['features']))
-            else:
-                centroids.append(sums[i][:])
+        if not clusters_features[i]:
+            # Jika kluster kosong, pilih titik acak dari data agar tidak stuck di koordinat [0,0]
+            random_point = random.choice(data)['features']
+            centroids.append(list(random_point))
         else:
-            centroids.append([value / counts[i] for value in sums[i]])
+            # Hitung median untuk setiap dimensi
+            centroid = []
+            num_points = len(clusters_features[i])
+            for j in range(dim):
+                dim_values = sorted([pt[j] for pt in clusters_features[i]])
+                if num_points % 2 == 1:
+                    median = dim_values[num_points // 2]
+                else:
+                    median = (dim_values[num_points // 2 - 1] + dim_values[num_points // 2]) / 2.0
+                centroid.append(median)
+            centroids.append(centroid)
     return centroids
-
 
 def silhouette_score(data, assignments):
     k = max(assignments) + 1 if assignments else 0
@@ -67,10 +68,13 @@ def silhouette_score(data, assignments):
     for index, point in enumerate(data):
         current_cluster = assignments[index]
         same_cluster = [j for j in clusters[current_cluster] if j != index]
-        if same_cluster:
-            a = sum(manhattan_distance(point['features'], data[j]['features']) for j in same_cluster) / len(same_cluster)
-        else:
-            a = 0.0
+        
+        # Jika kluster hanya berisi 1 anggota, nilai silhouette didefinisikan sebagai 0.0
+        if not same_cluster:
+            scores.append(0.0)
+            continue
+
+        a = sum(manhattan_distance(point['features'], data[j]['features']) for j in same_cluster) / len(same_cluster)
 
         b = float('inf')
         for cluster_id in range(k):
@@ -83,14 +87,13 @@ def silhouette_score(data, assignments):
             if avg_distance < b:
                 b = avg_distance
 
-        if b == float('inf') and a == 0:
+        if b == float('inf'):
             s = 0.0
         else:
             s = (b - a) / max(a, b)
         scores.append(s)
 
     return sum(scores) / len(scores) if scores else 0.0
-
 
 def run_clustering(data, k, max_iter):
     if not data:
@@ -138,7 +141,6 @@ def run_clustering(data, k, max_iter):
         'points': points
     }
 
-
 def main():
     try:
         payload = json.load(sys.stdin)
@@ -147,10 +149,9 @@ def main():
         max_iter = int(payload.get('maxIter', 100))
         result = run_clustering(data, k, max_iter)
         json.dump(result, sys.stdout)
-    except Exception as exc:  # pragma: no cover - simple CLI safety
+    except Exception as exc:
         json.dump({'error': str(exc)}, sys.stdout)
         sys.exit(1)
-
 
 if __name__ == '__main__':
     main()

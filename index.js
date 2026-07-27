@@ -20,15 +20,38 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'change_this',
+  secret: process.env.SESSION_SECRET || 'kmeanstahfizh',
   resave: false,
   saveUninitialized: true,
 }));
 
-// expose session and pathname to views
+// expose session, pathname, and flash messages to views
 app.use((req, res, next) => {
   res.locals.session = req.session;
   res.locals.pathname = req.path;
+
+  if (req.session.flash) {
+    if (req.session.flash.type === 'success' && !req.query.success) {
+      req.query.success = req.session.flash.message;
+    }
+    if (req.session.flash.type === 'error' && !req.query.error) {
+      req.query.error = req.session.flash.message;
+    }
+
+    res.locals.flash = req.session.flash;
+    res.locals.success = req.query.success || req.session.flash.message;
+    res.locals.error = req.query.error || null;
+
+    if (req.session.flash.type === 'error') {
+      res.locals.error = req.query.error || req.session.flash.message;
+    }
+
+    delete req.session.flash;
+  } else {
+    res.locals.success = req.query.success || null;
+    res.locals.error = req.query.error || null;
+  }
+
   next();
 });
 
@@ -46,3 +69,4 @@ app.use('/api', audit, apiRouter);
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+module.exports = app;

@@ -2,16 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title >Halaqoh Tahfizh Dashboard</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/variables.css">
     <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/responsive.css">
   </head>
   <body>
     <div class="d-flex" id="wrapper">
+      <div id="sidebar-overlay"></div>
       <% if (session && session.userId) { %>
         <%- include('../partials/sidebar') %>
       <% } %>
@@ -19,7 +22,7 @@
         <% if (session && session.userId) { %>
           <%- include('../partials/navbar') %>
         <% } %>
-        <div class="container-fluid p-4">
+        <div class="container-fluid p-2 p-md-4">
           <%- body %>
         </div>
       </div>
@@ -32,11 +35,24 @@
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const toggleBtn = document.getElementById('sidebarToggle');
+        const closeBtn = document.getElementById('sidebarCloseBtn');
         const wrapper = document.getElementById('wrapper');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar(e) {
+          if(e) e.preventDefault();
+          wrapper.classList.toggle('toggled');
+        }
+
         if (toggleBtn && wrapper) {
-          toggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            wrapper.classList.toggle('toggled');
+          toggleBtn.addEventListener('click', toggleSidebar);
+        }
+        if (closeBtn && wrapper) {
+          closeBtn.addEventListener('click', toggleSidebar);
+        }
+        if (overlay && wrapper) {
+          overlay.addEventListener('click', () => {
+            wrapper.classList.remove('toggled');
           });
         }
       });

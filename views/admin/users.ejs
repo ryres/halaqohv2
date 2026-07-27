@@ -43,7 +43,7 @@
               <td><small><%= new Date(u.created_at).toLocaleDateString('id-ID') %></small></td>
               <td>
                 <% if (u.id !== session.userId) { %>
-                  <form method="post" action="/users/<%= u.id %>/role" style="display:flex; gap:4px; align-items:center;">
+                  <form method="post" action="/users/<%= u.id %>/role" class="d-flex flex-wrap gap-1 align-items-center">
                     <select name="role" class="form-select form-select-sm" style="width:auto;">
                       <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>User</option>
                       <option value="guru_tahfizh" <%= u.role === 'guru_tahfizh' ? 'selected' : '' %>>Guru Tahfizh</option>
@@ -56,6 +56,7 @@
                 <% } %>
               </td>
               <td>
+                <div class="d-flex flex-wrap gap-1">
                 <% if (u.id !== session.userId) { %>
                   <form method="post" action="/users/<%= u.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus user <%= u.username %>?')">
                     <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Hapus</button>
@@ -63,6 +64,7 @@
                 <% } else { %>
                   <span class="text-muted small">-</span>
                 <% } %>
+                </div>
               </td>
             </tr>
           <% }); %>

@@ -1,0 +1,68 @@
+/* Cross-browser scrollbar for Webkit & Firefox */
+.table-responsive, 
+.chart-wrapper,
+#sidebar-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-light) #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar,
+.chart-wrapper::-webkit-scrollbar,
+#sidebar-wrapper::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb,
+.chart-wrapper::-webkit-scrollbar-thumb,
+#sidebar-wrapper::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track,
+.chart-wrapper::-webkit-scrollbar-track,
+#sidebar-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Touch-friendly buttons (min 44px height for standard touch targets, but we use sensible sizes for tables) */
+.btn-sm, .btn-group-sm > .btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 767.98px) {
+  /* Enlarge action buttons in tables for mobile */
+  .table .btn-sm, .table form button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Ensure form controls are large enough */
+  .form-control, .form-select {
+    min-height: 44px;
+  }
+
+  /* Adjust typography */
+  h2, .h2 { font-size: 1.5rem; }
+  h3, .h3 { font-size: 1.25rem; }
+  h5, .h5 { font-size: 1.1rem; }
+  
+  /* Padding utilities for mobile */
+  .p-md-4 {
+    padding: 1rem !important;
+  }
+}
+
+/* Fix viewport height for Safari on iOS */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+  #wrapper, #sidebar-wrapper {
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
+}

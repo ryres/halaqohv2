@@ -46,10 +46,12 @@
               <td><span class="badge bg-info"><%= s.halaqoh_nama || 'N/A' %></span></td>
               <td><small><%= s.guru_nama || '-' %></small></td>
               <td>
-                <a href="/santri/<%= s.id %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
-                <form method="post" action="/santri/<%= s.id %>/delete" style="display:inline;" onsubmit="return confirm('Buat request penghapusan santri ini?')">
-                  <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-trash"></i> Hapus</button>
-                </form>
+                <div class="d-flex flex-wrap gap-1">
+                  <a href="/santri/<%= s.id %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                  <form method="post" action="/santri/<%= s.id %>/delete" style="display:inline;" onsubmit="return confirm('Buat request penghapusan santri ini?')">
+                    <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-trash"></i> Hapus</button>
+                  </form>
+                </div>
               </td>
             </tr>
           <% }); %>
@@ -104,19 +106,19 @@
           <div class="row">
             <div class="col-md-3 mb-3">
               <label class="form-label">Juz</label>
-              <input type="number" name="juz" class="form-control" min="0" max="30" />
+              <select name="juz" class="form-control" data-selected=""></select>
             </div>
             <div class="col-md-3 mb-3">
               <label class="form-label">Surat</label>
-              <input type="text" name="surat" class="form-control" />
+              <select name="surat" class="form-control" data-selected=""></select>
             </div>
             <div class="col-md-3 mb-3">
               <label class="form-label">Ayat</label>
-              <input type="number" name="ayat" class="form-control" min="0" />
+              <select name="ayat" class="form-control" data-selected=""></select>
             </div>
             <div class="col-md-3 mb-3">
-              <label class="form-label">Target Juz</label>
-              <input type="number" name="target_juz" class="form-control" value="30" />
+              <label class="form-label">Target Juz (0-30)</label>
+              <input type="number" name="target_juz" class="form-control" min="0" max="30" />
             </div>
           </div>
           <div class="row">
@@ -163,6 +165,58 @@
   </div>
 </div>
         <script>
+        (function() {
+          const surahs = <%- JSON.stringify(surahsData || []) %>;
+          
+          function initSelects() {
+            const juzSelect = document.querySelector('select[name="juz"]');
+            const suratSelect = document.querySelector('select[name="surat"]');
+            const ayatSelect = document.querySelector('select[name="ayat"]');
+
+            if (juzSelect) {
+              const selectedJuz = juzSelect.getAttribute('data-selected');
+              juzSelect.innerHTML = '<option value="">-- Pilih Juz --</option>';
+              for (let i = 1; i <= 30; i++) {
+                juzSelect.innerHTML += `<option value="${i}" ${selectedJuz == i ? 'selected' : ''}>${i}</option>`;
+              }
+            }
+
+            if (suratSelect) {
+              const selectedSurat = suratSelect.getAttribute('data-selected');
+              suratSelect.innerHTML = '<option value="">-- Pilih Surat --</option>';
+              surahs.forEach((s) => {
+                suratSelect.innerHTML += `<option value="${s.name}" ${selectedSurat == s.name ? 'selected' : ''}>${s.name}</option>`;
+              });
+
+              suratSelect.addEventListener('change', function() {
+                updateAyatSelect(this.value);
+              });
+              
+              if (selectedSurat && ayatSelect) {
+                updateAyatSelect(selectedSurat, ayatSelect.getAttribute('data-selected'));
+              } else if (!selectedSurat && ayatSelect) {
+                ayatSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+              }
+            }
+            
+            function updateAyatSelect(suratName, selectedAyat = null) {
+              if (!ayatSelect) return;
+              ayatSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+              if (!suratName) return;
+              
+              const surahData = surahs.find(s => s.name === suratName);
+              if (surahData) {
+                for (let i = 1; i <= surahData.ayahs; i++) {
+                  ayatSelect.innerHTML += `<option value="${i}" ${selectedAyat == i ? 'selected' : ''}>${i}</option>`;
+                }
+              }
+            }
+          }
+
+          document.addEventListener('DOMContentLoaded', initSelects);
+        })();
+        </script>
+        <script>
         function validateSantriForm(form) {
           const toInt = (v) => { const n = parseInt(v,10); return Number.isNaN(n) ? null : n; };
           const juz = toInt(form.juz && form.juz.value);
@@ -171,10 +225,10 @@
           const kelancaran = toInt(form.kelancaran && form.kelancaran.value);
           const makhraj = toInt(form.makhraj && form.makhraj.value);
 
-          if (juz !== null && (juz < 0 || juz > 30)) { alert('Nilai Juz harus antara 0 dan 30'); return false; }
-          if (ayat !== null && ayat < 0) { alert('Nilai Ayat tidak valid'); return false; }
+          if (juz !== null && (juz < 1 || juz > 30)) { alert('Nilai Juz harus antara 1 dan 30'); return false; }
+          if (ayat !== null && ayat < 1) { alert('Nilai Ayat tidak valid'); return false; }
           const invalid100 = v => v !== null && (v < 0 || v > 100);
-          if (invalid100(tajwid) || invalid100(kelancaran) || invalid100(makhraj)) { alert('Nilai Tajwid/Kelancaran/Makhraj harus antara 0 dan 100'); return false; }
+          if (invalid100(tajwid) || invalid100(kelancaran) || invalid100(makhraj)) { alert('Nilai Tajwid, Kelancaran, atau Makhraj harus antara 0 dan 100'); return false; }
           return true;
         }
         </script>

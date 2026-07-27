@@ -31,9 +31,11 @@ exports.approve = async (req, res) => {
     await pool.query('INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)', 
       [reqRow.requested_by, 'Delete Approved', `Santri ${reqRow.santri_id} telah dihapus`, 'success', '/santri']);
 
-    res.redirect('/delete-requests?success=Request disetujui dan data santri dihapus');
+    req.session.flash = { type: 'success', message: 'Request disetujui dan data santri dihapus.' };
+    res.redirect('/delete-requests');
   } catch (err) {
-    res.redirect('/delete-requests?error=Gagal approve request');
+    req.session.flash = { type: 'error', message: 'Gagal approve request.' };
+    res.redirect('/delete-requests');
   }
 };
 
@@ -41,8 +43,10 @@ exports.reject = async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('UPDATE delete_requests SET status = ? WHERE id = ?', ['rejected', id]);
-    res.redirect('/delete-requests?success=Request ditolak');
+    req.session.flash = { type: 'success', message: 'Request ditolak.' };
+    res.redirect('/delete-requests');
   } catch (err) {
-    res.redirect('/delete-requests?error=Gagal reject request');
+    req.session.flash = { type: 'error', message: 'Gagal reject request.' };
+    res.redirect('/delete-requests');
   }
 };

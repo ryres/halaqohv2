@@ -4,11 +4,21 @@ function manhattanDistance(a, b) {
   return sum;
 }
 
+function seededRandom(seed) {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
 function randomCentroids(data, k) {
   const centroids = [];
   const used = new Set();
+  const myRandom = seededRandom(42); 
   while (centroids.length < k) {
-    const idx = Math.floor(Math.random() * data.length);
+    const idx = Math.floor(myRandom() * data.length);
     if (!used.has(idx)) {
       used.add(idx);
       centroids.push([...data[idx].features]);
@@ -32,28 +42,38 @@ function assignClusters(data, centroids) {
 }
 
 function updateCentroids(data, assignments, k) {
-  const sums = Array.from({ length: k }, () => null);
-  const counts = Array(k).fill(0);
+  const dimensions = data[0].features.length;
+  const clustersFeatures = Array.from({ length: k }, () => []);
+
   for (let i = 0; i < data.length; i++) {
-    const a = assignments[i];
-    if (!sums[a]) sums[a] = Array(data[i].features.length).fill(0);
-    for (let j = 0; j < data[i].features.length; j++) sums[a][j] += data[i].features[j];
-    counts[a]++;
+    clustersFeatures[assignments[i]].push(data[i].features);
   }
+
   const centroids = [];
   for (let i = 0; i < k; i++) {
-    if (counts[i] === 0) {
-      centroids.push(sums[i] ? sums[i].map(v => v / 1) : Array(data[0].features.length).fill(0));
+    const pts = clustersFeatures[i];
+    if (pts.length === 0) {
+      const myRandom = seededRandom(42 + i);
+      const randomIdx = Math.floor(myRandom() * data.length);
+      centroids.push([...data[randomIdx].features]);
     } else {
-      centroids.push(sums[i].map(v => v / counts[i]));
+      const centroid = [];
+      for (let j = 0; j < dimensions; j++) {
+        const dimValues = pts.map(p => p[j]).sort((a, b) => a - b);
+        const half = Math.floor(dimValues.length / 2);
+        if (dimValues.length % 2 !== 0) {
+          centroid.push(dimValues[half]);
+        } else {
+          centroid.push((dimValues[half - 1] + dimValues[half]) / 2.0);
+        }
+      }
+      centroids.push(centroid);
     }
   }
   return centroids;
 }
 
 function silhouetteScore(data, assignments, centroids) {
-  // For each point, compute a(i) = avg distance to other points in same cluster
-  // b(i) = min over other clusters of avg distance to points in that cluster
   const k = centroids.length;
   const clusters = Array.from({ length: k }, () => []);
   for (let i = 0; i < data.length; i++) clusters[assignments[i]].push(data[i]);
@@ -64,11 +84,12 @@ function silhouetteScore(data, assignments, centroids) {
     const cIdx = assignments[i];
     const inCluster = clusters[cIdx].filter(x => x !== p);
 
-    let a = 0;
-    if (inCluster.length === 0) a = 0;
-    else {
-      a = inCluster.reduce((sum, q) => sum + manhattanDistance(p.features, q.features), 0) / inCluster.length;
+    if (inCluster.length === 0) {
+      scores.push(0);
+      continue;
     }
+
+    const a = inCluster.reduce((sum, q) => sum + manhattanDistance(p.features, q.features), 0) / inCluster.length;
 
     let b = Infinity;
     for (let j = 0; j < k; j++) {
@@ -79,12 +100,11 @@ function silhouetteScore(data, assignments, centroids) {
       if (avg < b) b = avg;
     }
 
-    const s = (b === Infinity && a === 0) ? 0 : (b - a) / Math.max(a, b);
+    const s = (b === Infinity) ? 0 : (b - a) / Math.max(a, b);
     scores.push(s);
   }
 
-  const mean = scores.reduce((s, v) => s + v, 0) / scores.length;
-  return mean;
+  return scores.reduce((s, v) => s + v, 0) / scores.length;
 }
 
 function kmeans(data, k, opts = {}) {
@@ -114,9 +134,33 @@ function kmeans(data, k, opts = {}) {
     clusters[c].push(data[i].id);
   }
 
-  // include points array (id + features) and assignments for frontend
-  const points = data.map((d, idx) => ({ id: d.id, name: d.name, surat: d.surat || '', ayat: d.ayat || '', features: d.features, cluster: assignments[idx] }));
+  const points = data.map((d, idx) => {
+    // Hitung rata-rata nilai dari seluruh fitur (features) data ini
+    const sumFeatures = d.features.reduce((a, b) => a + b, 0);
+    const avgFeatures = sumFeatures / d.features.length;
+    
+    // Tentukan kategori sesuai rentang yang diinginkan
+    let kategori = 'Menengah';
+    if (avgFeatures < 62) {
+      kategori = 'Rendah';
+    } else if (avgFeatures > 79) {
+      kategori = 'Tinggi';
+    }
 
+    return {
+      id: d.id,
+      name: d.name,
+      surat: d.surat || '',
+      ayat: d.ayat || '',
+      features: d.features,
+      cluster: assignments[idx],
+      rata_rata: avgFeatures,
+      kategori: kategori
+    };
+  })
+  // PROSES PENGURUTAN: Diurutkan dari rata_rata tertinggi ke terendah
+  .sort((a, b) => b.rata_rata - a.rata_rata);
+  
   return { clusters, centroids, silhouette, assignments, points };
 }
 

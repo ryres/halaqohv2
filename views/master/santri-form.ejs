@@ -18,19 +18,19 @@
       <div class="row">
         <div class="col-md-3 mb-3">
           <label class="form-label fw-semibold">Juz</label>
-          <input type="number" name="juz" class="form-control" min="0" max="30" value="<%= santri.juz || 0 %>" />
+          <select name="juz" class="form-control" data-selected="<%= santri.juz || '' %>"></select>
         </div>
         <div class="col-md-3 mb-3">
           <label class="form-label fw-semibold">Surat</label>
-          <input type="text" name="surat" class="form-control" value="<%= santri.surat || '' %>" />
+          <select name="surat" class="form-control" data-selected="<%= santri.surat || '' %>"></select>
         </div>
         <div class="col-md-3 mb-3">
           <label class="form-label fw-semibold">Ayat</label>
-          <input type="number" name="ayat" class="form-control" min="0" value="<%= santri.ayat || 0 %>" />
+          <select name="ayat" class="form-control" data-selected="<%= santri.ayat || '' %>"></select>
         </div>
         <div class="col-md-3 mb-3">
-          <label class="form-label fw-semibold">Target Juz</label>
-          <input type="number" name="target_juz" class="form-control" min="1" max="30" value="<%= santri.target_juz || 30 %>" />
+          <label class="form-label fw-semibold">Target Juz (0-30)</label>
+          <input type="number" name="target_juz" class="form-control" min="0" max="30" value="<%= santri.target_juz || '' %>" />
         </div>
       </div>
 
@@ -78,3 +78,55 @@
     </form>
   </div>
 </div>
+<script>
+(function() {
+  const surahs = <%- JSON.stringify(surahsData || []) %>;
+  
+  function initSelects() {
+    const juzSelect = document.querySelector('select[name="juz"]');
+    const suratSelect = document.querySelector('select[name="surat"]');
+    const ayatSelect = document.querySelector('select[name="ayat"]');
+
+    if (juzSelect) {
+      const selectedJuz = juzSelect.getAttribute('data-selected');
+      juzSelect.innerHTML = '<option value="">-- Pilih Juz --</option>';
+      for (let i = 1; i <= 30; i++) {
+        juzSelect.innerHTML += `<option value="${i}" ${selectedJuz == i ? 'selected' : ''}>${i}</option>`;
+      }
+    }
+
+    if (suratSelect) {
+      const selectedSurat = suratSelect.getAttribute('data-selected');
+      suratSelect.innerHTML = '<option value="">-- Pilih Surat --</option>';
+      surahs.forEach((s) => {
+        suratSelect.innerHTML += `<option value="${s.name}" ${selectedSurat == s.name ? 'selected' : ''}>${s.name}</option>`;
+      });
+
+      suratSelect.addEventListener('change', function() {
+        updateAyatSelect(this.value);
+      });
+      
+      if (selectedSurat && ayatSelect) {
+        updateAyatSelect(selectedSurat, ayatSelect.getAttribute('data-selected'));
+      } else if (!selectedSurat && ayatSelect) {
+        ayatSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+      }
+    }
+    
+    function updateAyatSelect(suratName, selectedAyat = null) {
+      if (!ayatSelect) return;
+      ayatSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+      if (!suratName) return;
+      
+      const surahData = surahs.find(s => s.name === suratName);
+      if (surahData) {
+        for (let i = 1; i <= surahData.ayahs; i++) {
+          ayatSelect.innerHTML += `<option value="${i}" ${selectedAyat == i ? 'selected' : ''}>${i}</option>`;
+        }
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initSelects);
+})();
+</script>

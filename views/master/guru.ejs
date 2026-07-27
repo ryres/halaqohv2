@@ -33,10 +33,12 @@
               <td><%= guru.jabatan %></td>
               <td><%= guru.unit %></td>
               <td>
-                <a href="/guru/<%= guru.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
-                <form method="post" action="/guru/<%= guru.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
-                  <button class="btn btn-outline-danger btn-sm">Hapus</button>
-                </form>
+                <div class="d-flex flex-wrap gap-1">
+                  <a href="/guru/<%= guru.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
+                  <form method="post" action="/guru/<%= guru.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
+                    <button class="btn btn-outline-danger btn-sm">Hapus</button>
+                  </form>
+                </div>
               </td>
             </tr>
           <% }); %>

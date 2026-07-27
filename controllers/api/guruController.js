@@ -14,8 +14,10 @@ exports.create = async (req, res) => {
   const { nama, jabatan, unit } = req.body;
   const [result] = await pool.query('INSERT INTO guru (nama, jabatan, unit) VALUES (?, ?, ?)', [nama, jabatan, unit]);
   res.json({ id: result.insertId });
+ 
 };
 
+ 
 exports.update = async (req, res) => {
   const { nama, jabatan, unit } = req.body;
   await pool.query('UPDATE guru SET nama = ?, jabatan = ?, unit = ? WHERE id = ?', [nama, jabatan, unit, req.params.id]);

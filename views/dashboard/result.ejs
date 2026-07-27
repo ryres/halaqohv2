@@ -1,4 +1,4 @@
-﻿<style>
+<style>
   :root {
     --primary: #6D28D9;
     --primary-light: #8B5CF6;
@@ -96,7 +96,7 @@
   </div>
 
   <div class="row">
-    <div class="col-lg-8">
+    <div class="col-12 col-lg-8">
       <div class="card p-3 mb-3 result-chart-card">
         <h6><i class="bi bi-graph-up me-2"></i>Line Chart — Perubahan Centroid per Iterasi</h6>
         <div class="chart-wrapper line-chart"><canvas id="lineChart"></canvas></div>
@@ -130,6 +130,8 @@
             <thead>
               <tr>
                 <th class="py-2">Nama</th>
+                <th class="py-2">Guru</th>
+                <th class="py-2">Halaqoh</th>
                 <th class="py-2">Kategori</th>
                 <th class="py-2 text-center">Cluster</th>
               </tr>
@@ -140,7 +142,7 @@
       </div>
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-12 col-lg-4">
       <div class="card p-3 mb-3">
         <h6><i class="bi bi-bar-chart me-2"></i>Jumlah Anggota per Cluster</h6>
         <canvas id="barChart" style="max-height:280px;"></canvas>
@@ -260,7 +262,6 @@ function getSortedPoints() {
   if (!clusteringData || !Array.isArray(clusteringData.points)) return [];
   const points = [...clusteringData.points];
   const order = { 'Tinggi': 0, 'Menengah': 1, 'Rendah': 2 };
-
   return points.sort((a, b) => {
     let result = 0;
     if (tableSort.field === 'name') {
@@ -288,7 +289,7 @@ function renderSantriTable() {
   if (!container) return;
   const points = getSortedPoints();
   if (points.length === 0) {
-    container.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada santri.</td></tr>`;
+    container.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada santri.</td></tr>`;
     return;
   }
 
@@ -299,6 +300,8 @@ function renderSantriTable() {
     return `
       <tr>
         <td>${p.name || '-'}</td>
+        <td>${p.guru || '-'}</td>
+        <td>${p.halaqoh || '-'}</td>
         <td><span class="badge ${badgeClass}">${label}</span></td>
         <td class="text-center"><span class="badge bg-light text-dark border">${clusterText}</span></td>
       </tr>
@@ -368,7 +371,6 @@ function renderCharts() {
       barAvgs.push(s.avgScore || 0);
     }
   });
-
   destroyChart(barChart);
   barChart = new Chart(document.getElementById('barChart'), {
     type: 'bar',
@@ -405,7 +407,6 @@ function renderCharts() {
       }
     }
   });
-
   const radarLabels = ['Tajwid', 'Kelancaran', 'Makhraj'];
   const radarDatasets = stats.map(s => ({
     label: s.label || `Cluster ${s.cluster}`,
@@ -416,7 +417,6 @@ function renderCharts() {
     fill: true,
     tension: 0.2
   }));
-
   destroyChart(radarChart);
   radarChart = new Chart(document.getElementById('radarChart'), {
     type: 'radar',
@@ -428,7 +428,6 @@ function renderCharts() {
       scales: { r: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.06)' }, pointLabels: { font: { weight: 'bold' } } } }
     }
   });
-
   const iterCount = Math.max(3, Math.ceil(silhouette * 10));
   const iterLabels = Array.from({ length: iterCount }, (_, i) => `Iter ${i + 1}`);
   const iterData = iterLabels.map((_, i) => parseFloat(((0.2 + ((i + 1) / iterCount) * (silhouette - 0.2))).toFixed(4)));
@@ -475,8 +474,19 @@ function renderCharts() {
 function downloadSantriCSV() {
   if (!clusteringData) return;
   const points = getSortedPoints();
-  const headers = ['Nama', 'Kategori', 'Cluster'];
-  const rows = points.map(p => [p.name || '-', p.label || 'Tidak Diketahui', p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-']);
+  
+  // Header CSV dengan kolom Guru dan Halaqoh
+  const headers = ['Nama', 'Guru', 'Halaqoh', 'Kategori', 'Cluster'];
+  
+  // Baris CSV mengambil properti guru & halaqoh
+  const rows = points.map(p => [
+    p.name || '-', 
+    p.guru || '-', 
+    p.halaqoh || '-', 
+    p.label || 'Tidak Diketahui', 
+    p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-'
+  ]);
+  
   const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -495,9 +505,15 @@ function downloadSantriPDF() {
   const doc = new jsPDF('landscape', 'mm', 'a4');
   const points = getSortedPoints();
   const statsMap = (clusteringData.clusterStats || []).reduce((map, s) => { map[s.cluster] = s.avgScore || 0; return map; }, {});
-  const headers = [['Nama', 'Kategori', 'Cluster', 'Avg Cluster']];
+  
+  // Header PDF dengan kolom Guru dan Halaqoh
+  const headers = [['Nama', 'Guru', 'Halaqoh', 'Kategori', 'Cluster', 'Avg Cluster']];
+  
+  // Memasukkan data guru & halaqoh ke baris PDF
   const rows = points.map(p => [
     p.name || '-',
+    p.guru || '-',
+    p.halaqoh || '-',
     p.label || 'Tidak Diketahui',
     p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-',
     statsMap[p.cluster] !== undefined ? statsMap[p.cluster].toFixed(2) : '-'
@@ -510,7 +526,7 @@ function downloadSantriPDF() {
   doc.setFontSize(10);
   doc.text(`Jumlah Santri: ${points.length}  |  Silhouette Score: ${Number(clusteringData.silhouette || 0).toFixed(4)}`, 14, 28);
   doc.text(`Waktu Cetak: ${new Date().toLocaleString('id-ID')}`, 14, 34);
-
+  
   doc.autoTable({
     head: headers,
     body: rows,
@@ -519,9 +535,16 @@ function downloadSantriPDF() {
     headStyles: { fillColor: [109, 40, 217] },
     margin: { left: 14, right: 14 },
     styles: { fontSize: 8 },
-    columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 40 }, 2: { cellWidth: 30 }, 3: { cellWidth: 30 } }
+    // Penyesuaian proporsi lebar kolom agar pas di kertas A4 landscape
+    columnStyles: { 
+      0: { cellWidth: 50 }, // Nama
+      1: { cellWidth: 45 }, // Guru
+      2: { cellWidth: 45 }, // Halaqoh
+      3: { cellWidth: 35 }, // Kategori
+      4: { cellWidth: 25 }, // Cluster
+      5: { cellWidth: 30 }  // Avg Cluster
+    }
   });
-
   doc.save('Halaqoh_santri.pdf');
 }
 

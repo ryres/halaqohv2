@@ -15,9 +15,11 @@ exports.create = async (req, res) => {
   const { nama_halaqoh, guru_id, ruangan, jadwal } = req.body;
   try {
     await pool.query('INSERT INTO halaqoh (nama_halaqoh, guru_id, ruangan, jadwal) VALUES (?, ?, ?, ?)', [nama_halaqoh, guru_id || null, ruangan, jadwal]);
+    req.session.flash = { type: 'success', message: 'Halaqoh berhasil ditambahkan.' };
     res.redirect('/halaqoh');
   } catch (err) {
-    res.redirect('/halaqoh?error=Gagal menambah halaqoh');
+    req.session.flash = { type: 'error', message: 'Gagal menambah halaqoh.' };
+    res.redirect('/halaqoh');
   }
 };
 
@@ -37,9 +39,11 @@ exports.update = async (req, res) => {
   const { nama_halaqoh, guru_id, ruangan, jadwal } = req.body;
   try {
     await pool.query('UPDATE halaqoh SET nama_halaqoh = ?, guru_id = ?, ruangan = ?, jadwal = ? WHERE id = ?', [nama_halaqoh, guru_id || null, ruangan, jadwal, id]);
+    req.session.flash = { type: 'success', message: 'Halaqoh berhasil diperbarui.' };
     res.redirect('/halaqoh');
   } catch (err) {
-    res.redirect('/halaqoh?error=Gagal update');
+    req.session.flash = { type: 'error', message: 'Gagal memperbarui halaqoh.' };
+    res.redirect('/halaqoh');
   }
 };
 
@@ -47,8 +51,10 @@ exports.delete = async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM halaqoh WHERE id = ?', [id]);
+    req.session.flash = { type: 'success', message: 'Halaqoh berhasil dihapus.' };
     res.redirect('/halaqoh');
   } catch (err) {
-    res.redirect('/halaqoh?error=Gagal hapus');
+    req.session.flash = { type: 'error', message: 'Gagal menghapus halaqoh.' };
+    res.redirect('/halaqoh');
   }
 };

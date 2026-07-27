@@ -20,9 +20,11 @@ exports.create = async (req, res) => {
   try {
     const hash = await bcrypt.hash(password, 10);
     await pool.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, hash, role || 'user']);
-    res.redirect('/users?success=User berhasil ditambahkan');
+    req.session.flash = { type: 'success', message: 'User berhasil ditambahkan.' };
+    res.redirect('/users');
   } catch (err) {
-    res.redirect('/users?error=Gagal menambah user: ' + err.message);
+    req.session.flash = { type: 'error', message: 'Gagal menambah user: ' + err.message };
+    res.redirect('/users');
   }
 };
 
@@ -31,22 +33,27 @@ exports.updateRole = async (req, res) => {
   const { role } = req.body;
   try {
     await pool.query('UPDATE users SET role = ? WHERE id = ?', [role, id]);
-    res.redirect('/users?success=Role user berhasil diperbarui');
+    req.session.flash = { type: 'success', message: 'Role user berhasil diperbarui.' };
+    res.redirect('/users');
   } catch (err) {
-    res.redirect('/users?error=Gagal update role');
+    req.session.flash = { type: 'error', message: 'Gagal memperbarui role user.' };
+    res.redirect('/users');
   }
 };
 
 exports.delete = async (req, res) => {
   const { id } = req.params;
   if (parseInt(id) === req.session.userId) {
-    return res.redirect('/users?error=Tidak dapat menghapus akun sendiri');
+    req.session.flash = { type: 'error', message: 'Tidak dapat menghapus akun sendiri.' };
+    return res.redirect('/users');
   }
   try {
     await pool.query('DELETE FROM users WHERE id = ?', [id]);
-    res.redirect('/users?success=User berhasil dihapus');
+    req.session.flash = { type: 'success', message: 'User berhasil dihapus.' };
+    res.redirect('/users');
   } catch (err) {
-    res.redirect('/users?error=Gagal hapus user');
+    req.session.flash = { type: 'error', message: 'Gagal menghapus user.' };
+    res.redirect('/users');
   }
 };
 

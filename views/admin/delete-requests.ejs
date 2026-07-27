@@ -41,6 +41,7 @@
                 <% } %>
               </td>
               <td>
+                <div class="d-flex flex-wrap gap-1">
                 <% if (req.status === 'pending') { %>
                   <form method="post" action="/delete-requests/<%= req.id %>/approve" style="display:inline;" onsubmit="return confirm('Setujui penghapusan?')">
                     <button class="btn btn-outline-success btn-sm">Approve</button>
@@ -51,6 +52,7 @@
                 <% } else { %>
                   <span class="text-muted small">-</span>
                 <% } %>
+                </div>
               </td>
             </tr>
           <% }); %>

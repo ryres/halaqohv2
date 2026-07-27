@@ -38,7 +38,8 @@ exports.result = async (req, res) => {
 
 exports.importDataset = async (req, res) => {
   if (!req.file) {
-    return res.redirect('/dataset?error=Silakan pilih file CSV/XLSX terlebih dahulu.');
+    req.session.flash = { type: 'error', message: 'Silakan pilih file CSV/XLSX terlebih dahulu.' };
+    return res.redirect('/dataset');
   }
 
   try {
@@ -49,7 +50,8 @@ exports.importDataset = async (req, res) => {
 
     if (data.length === 0) {
       fs.unlinkSync(req.file.path);
-      return res.redirect('/dataset?error=File kosong atau tidak memiliki data.');
+      req.session.flash = { type: 'error', message: 'File kosong atau tidak memiliki data.' };
+      return res.redirect('/dataset');
     }
 
     const [halaqohs] = await pool.query('SELECT id, nama_halaqoh FROM halaqoh');
@@ -154,13 +156,15 @@ exports.importDataset = async (req, res) => {
       message += ` Gagal ${importErrors.length} baris.`;
       console.error('Import dataset errors (first 10):', importErrors.slice(0, 10));
     }
-    res.redirect(`/dataset?success=${encodeURIComponent(message)}`);
+    req.session.flash = { type: 'success', message };
+    res.redirect('/dataset');
   } catch (err) {
     console.error(err);
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.redirect(`/dataset?error=Gagal mengimpor dataset: ${encodeURIComponent(err.message)}`);
+    req.session.flash = { type: 'error', message: `Gagal mengimpor dataset: ${err.message}` };
+    res.redirect('/dataset');
   }
 };
 
@@ -171,9 +175,11 @@ exports.deleteDataset = async (req, res) => {
     const details = JSON.stringify({ userId: req.session.userId, username: req.session.username, message: 'Semua data santri dihapus' });
     const ip = req.ip || req.connection.remoteAddress || null;
     await pool.query('INSERT INTO logs (user_id, username, action, details, ip_address) VALUES (?, ?, ?, ?, ?)', [req.session.userId, req.session.username, action, details, ip]);
-    res.redirect('/dataset?success=Semua dataset santri berhasil dihapus.');
+    req.session.flash = { type: 'success', message: 'Semua dataset santri berhasil dihapus.' };
+    res.redirect('/dataset');
   } catch (err) {
     console.error(err);
-    res.redirect(`/dataset?error=Gagal menghapus dataset: ${encodeURIComponent(err.message)}`);
+    req.session.flash = { type: 'error', message: `Gagal menghapus dataset: ${err.message}` };
+    res.redirect('/dataset');
   }
 };

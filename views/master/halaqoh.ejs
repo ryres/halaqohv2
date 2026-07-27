@@ -37,10 +37,12 @@
               <td><%= h.jadwal %></td>
               <td><span class="badge bg-primary"><%= h.jumlah_santri %></span></td>
               <td>
-                <a href="/halaqoh/<%= h.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
-                <form method="post" action="/halaqoh/<%= h.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
-                  <button class="btn btn-outline-danger btn-sm">Hapus</button>
-                </form>
+                <div class="d-flex flex-wrap gap-1">
+                  <a href="/halaqoh/<%= h.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
+                  <form method="post" action="/halaqoh/<%= h.id %>/delete" style="display:inline;" onsubmit="return confirm('Yakin hapus?')">
+                    <button class="btn btn-outline-danger btn-sm">Hapus</button>
+                  </form>
+                </div>
               </td>
             </tr>
           <% }); %>

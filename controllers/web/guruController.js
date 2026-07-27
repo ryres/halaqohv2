@@ -14,10 +14,12 @@ exports.create = async (req, res) => {
   const { nama, jabatan, unit } = req.body;
   try {
     await pool.query('INSERT INTO guru (nama, jabatan, unit) VALUES (?, ?, ?)', [nama, jabatan, unit]);
+    req.session.flash = { type: 'success', message: 'Guru berhasil ditambahkan.' };
     res.redirect('/guru');
   } catch (err) {
     console.error(err);
-    res.redirect('/guru?error=Gagal menambah guru');
+    req.session.flash = { type: 'error', message: 'Gagal menambah guru.' };
+    res.redirect('/guru');
   }
 };
 
@@ -36,9 +38,11 @@ exports.update = async (req, res) => {
   const { nama, jabatan, unit } = req.body;
   try {
     await pool.query('UPDATE guru SET nama = ?, jabatan = ?, unit = ? WHERE id = ?', [nama, jabatan, unit, id]);
+    req.session.flash = { type: 'success', message: 'Guru berhasil diperbarui.' };
     res.redirect('/guru');
   } catch (err) {
-    res.redirect('/guru?error=Gagal update');
+    req.session.flash = { type: 'error', message: 'Gagal memperbarui guru.' };
+    res.redirect('/guru');
   }
 };
 
@@ -46,8 +50,10 @@ exports.delete = async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM guru WHERE id = ?', [id]);
+    req.session.flash = { type: 'success', message: 'Guru berhasil dihapus.' };
     res.redirect('/guru');
   } catch (err) {
-    res.redirect('/guru?error=Gagal hapus');
+    req.session.flash = { type: 'error', message: 'Gagal menghapus guru.' };
+    res.redirect('/guru');
   }
 };
