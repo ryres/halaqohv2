@@ -9,7 +9,7 @@ exports.list = async (req, res) => {
   const [rows] = await pool.query(
     `SELECT SQL_CALC_FOUND_ROWS s.*, 
       ((COALESCE(tajwid,0) + COALESCE(kelancaran,0) + COALESCE(makhraj,0)) / 3) AS avg_score
-      FROM santri s ORDER BY id DESC LIMIT ? OFFSET ?`,
+      FROM santri s WHERE s.is_deleted = 0 ORDER BY id DESC LIMIT ? OFFSET ?`,
     [limit, offset]
   );
   const [[{ 'FOUND_ROWS()': totalRows }]] = await pool.query('SELECT FOUND_ROWS()');
@@ -18,19 +18,23 @@ exports.list = async (req, res) => {
 };
 
 exports.get = async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM santri WHERE id = ?', [req.params.id]);
+  const [rows] = await pool.query('SELECT * FROM santri WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json(rows[0] || null);
 };
 
 exports.create = async (req, res) => {
-  const { nama, kelas, juz, surat, ayat, tajwid, kelancaran, makhraj, halaqoh_id, guru_id, target_juz, user_id } = req.body;
-  const [result] = await pool.query('INSERT INTO santri (nama, kelas, juz, surat, ayat, setoran_tgl, tajwid, kelancaran, makhraj, halaqoh_id, guru_id, target_juz, user_id) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?)', [nama, kelas, juz, surat, ayat, tajwid, kelancaran, makhraj, halaqoh_id || null, guru_id || null, target_juz || 30, user_id || null]);
+  const { nama, kelas, juz, surat, ayat_from, ayat_to, tajwid, kelancaran, makhraj, halaqoh_id, guru_id, target_juz, user_id } = req.body;
+  const ayatFrom = ayat_from ? parseInt(ayat_from) : null;
+  const ayatTo = ayat_to ? parseInt(ayat_to) : null;
+  const [result] = await pool.query('INSERT INTO santri (nama, kelas, juz, surat, ayat, setoran_tgl, tajwid, kelancaran, makhraj, halaqoh_id, guru_id, target_juz, user_id) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?)', [nama, kelas, juz, surat, ayatTo, tajwid, kelancaran, makhraj, halaqoh_id || null, guru_id || null, target_juz || 30, user_id || null]);
   res.json({ id: result.insertId });
 };
 
 exports.update = async (req, res) => {
-  const { nama, kelas, juz, surat, ayat, tajwid, kelancaran, makhraj, halaqoh_id, guru_id, target_juz } = req.body;
-  await pool.query('UPDATE santri SET nama=?, kelas=?, juz=?, surat=?, ayat=?, setoran_tgl=NOW(), tajwid=?, kelancaran=?, makhraj=?, halaqoh_id=?, guru_id=?, target_juz=? WHERE id=?', [nama, kelas, juz, surat, ayat, tajwid, kelancaran, makhraj, halaqoh_id || null, guru_id || null, target_juz || 30, req.params.id]);
+  const { nama, kelas, juz, surat, ayat_from, ayat_to, tajwid, kelancaran, makhraj, halaqoh_id, guru_id, target_juz } = req.body;
+  const ayatFrom = ayat_from ? parseInt(ayat_from) : null;
+  const ayatTo = ayat_to ? parseInt(ayat_to) : null;
+  await pool.query('UPDATE santri SET nama=?, kelas=?, juz=?, surat=?, ayat=?, setoran_tgl=NOW(), tajwid=?, kelancaran=?, makhraj=?, halaqoh_id=?, guru_id=?, target_juz=? WHERE id=?', [nama, kelas, juz, surat, ayatTo, tajwid, kelancaran, makhraj, halaqoh_id || null, guru_id || null, target_juz || 30, req.params.id]);
   res.json({ ok: true });
 };
 

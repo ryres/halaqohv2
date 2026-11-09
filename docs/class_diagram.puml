@@ -1,0 +1,364 @@
+@startuml Halaqohv2 Class Diagram
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam classBackgroundColor<<MODEL>> #FFCCCC
+skinparam classBorderColor<<MODEL>> #CC0000
+skinparam classBackgroundColor<<SERVICE>> #CCFFCC
+skinparam classBorderColor<<SERVICE>> #006600
+skinparam classBackgroundColor<<WEBCONTROLLER>> #CCE5FF
+skinparam classBorderColor<<WEBCONTROLLER>> #004080
+skinparam classBackgroundColor<<APICONTROLLER>> #99CCFF
+skinparam classBorderColor<<APICONTROLLER>> #003366
+skinparam classBackgroundColor<<MIDDLEWARE>> #FFFFCC
+skinparam classBorderColor<<MIDDLEWARE>> #666600
+skinparam classBackgroundColor<<ROUTES>> #E5CCFF
+skinparam classBorderColor<<ROUTES>> #4B0082
+skinparam classBackgroundColor<<APP>> #FF9999
+skinparam classBorderColor<<APP>> #800000
+skinparam classBackgroundColor<<VIEWS>> #CCFFFF
+skinparam classBorderColor<<VIEWS>> #006666
+skinparam classBackgroundColor<<DATABASE>> #FFCC99
+skinparam classBorderColor<<DATABASE>> #804000
+skinparam classBackgroundColor<<SCRIPT>> #CCFFCC
+skinparam classBorderColor<<SCRIPT>> #006600
+
+skinparam classFontSize 11
+skinparam classFontName Arial
+skinparam arrowColor #333333
+skinparam arrowFontSize 10
+
+title Sistem Halaqohv2 - Class Diagram
+
+' ========== MODELS / DATABASE ==========
+class User <<MODEL>> {
+  +int id
+  +string username
+  +string password
+  +string role
+  +datetime created_at
+}
+
+class Guru <<MODEL>> {
+  +int id
+  +string nama
+  +string jabatan
+  +string unit
+  +datetime created_at
+}
+
+class Halaqoh <<MODEL>> {
+  +int id
+  +string nama_halaqoh
+  +int guru_id
+  +string ruangan
+  +string jadwal
+  +datetime created_at
+}
+
+class Santri <<MODEL>> {
+  +int id
+  +string nama
+  +string kelas
+  +int juz
+  +string surat
+  +int ayat
+  +date setoran_tgl
+  +int tajwid
+  +int kelancaran
+  +int makhraj
+  +int halaqoh_id
+  +int guru_id
+  +int target_juz
+  +int user_id
+  +datetime created_at
+}
+
+class DeleteRequest <<MODEL>> {
+  +int id
+  +int santri_id
+  +int requested_by
+  +text reason
+  +enum status
+  +datetime approved_at
+  +datetime created_at
+}
+
+class Log <<MODEL>> {
+  +int id
+  +int user_id
+  +string username
+  +string action
+  +text details
+  +string ip_address
+  +datetime created_at
+}
+
+class Notification <<MODEL>> {
+  +int id
+  +int user_id
+  +string title
+  +text message
+  +enum type
+  +string link
+  +boolean is_read
+  +datetime created_at
+}
+
+' ========== SERVICES ==========
+class ClusteringService <<SERVICE>> {
+  +manhattanDistance(a, b)
+  +kmeans(data, k, opts)
+  +silhouetteScore(data, assignments, centroids)
+}
+
+class QuranService <<SERVICE>> {
+  +HolyQuranHafsVersion
+  +getSurahs()
+  +getAyahs(surah)
+}
+
+class AuthService <<SERVICE>> {
+  +validatePassword(plain, hash)
+  +hashPassword(password)
+}
+
+class AuditService <<SERVICE>> {
+  +log(userId, username, action, details, ip)
+}
+
+' ========== WEB CONTROLLERS ==========
+class AuthController <<WEBCONTROLLER>> {
+  +loginForm()
+  +login()
+  +logout()
+}
+
+class DashboardController <<WEBCONTROLLER>> {
+  +index()
+  +dataset()
+  +clustering()
+  +result()
+  +importDataset()
+  +deleteDataset()
+}
+
+class GuruController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +edit()
+  +update()
+  +delete()
+}
+
+class HalaqohController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +edit()
+  +update()
+  +delete()
+}
+
+class SantriController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +edit()
+  +update()
+  +requestDelete()
+}
+
+class UsersController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +updateRole()
+  +delete()
+}
+
+class LogsController <<WEBCONTROLLER>> {
+  +list()
+}
+
+class DeleteRequestsController <<WEBCONTROLLER>> {
+  +list()
+  +approve()
+  +reject()
+}
+
+' ========== API CONTROLLERS ==========
+class ClusteringAPIController <<APICONTROLLER>> {
+  +process()
+  +result()
+}
+
+class GuruAPIController <<APICONTROLLER>> {
+  +list()
+  +get()
+  +create()
+  +update()
+  +remove()
+}
+
+class HalaqohAPIController <<APICONTROLLER>> {
+  +list()
+  +get()
+  +create()
+  +update()
+  +remove()
+}
+
+class SantriAPIController <<APICONTROLLER>> {
+  +list()
+  +get()
+  +create()
+  +update()
+  +requestDelete()
+}
+
+class UsersAPIController <<APICONTROLLER>> {
+  +list()
+  +get()
+  +create()
+  +update()
+  +remove()
+}
+
+class DeleteRequestsAPIController <<APICONTROLLER>> {
+  +list()
+  +approve()
+  +reject()
+}
+
+' ========== MIDDLEWARE ==========
+class AuthMiddleware <<MIDDLEWARE>> {
+  +isAuthenticated(req)
+  +requireAuth(req, res, next)
+  +requireRole(role)
+  +requireAdminApi(req, res, next)
+  +denyGuruTahfizhApi(req, res, next)
+}
+
+class AuditMiddleware <<MIDDLEWARE>> {
+  +audit(req, res, next)
+}
+
+' ========== ROUTES ==========
+class WebRoutes <<ROUTES>> {
+  +dashboard
+  +guru
+  +halaqoh
+  +santri
+  +users
+  +delete-requests
+  +logs
+}
+
+class APIRoutes <<ROUTES>> {
+  +users
+  +guru
+  +halaqoh
+  +santri
+  +clustering
+  +delete_requests
+}
+
+class AuthRoutes <<ROUTES>> {
+  +login
+  +logout
+}
+
+' ========== APP / CONFIG ==========
+class ExpressApp <<APP>> {
+  +use(middleware)
+  +use(routes)
+  +listen(PORT)
+}
+
+class Database <<DATABASE>> {
+  +mysql.createPool(config)
+  +query(sql, params)
+}
+
+class Views <<VIEWS>> {
+  +auth/login
+  +dashboard/index
+  +dashboard/dataset
+  +dashboard/clustering
+  +dashboard/result
+  +master/guru
+  +master/guru-form
+  +master/halaqoh
+  +master/halaqoh-form
+  +master/santri
+  +master/santri-form
+  +admin/users
+  +admin/delete-requests
+  +admin/logs
+  +layouts/main
+  +layouts/login
+  +partials/*
+}
+
+class ClusteringScript <<SCRIPT>> {
+  +python clustering_python.py
+  +python clustering_python_1.py
+}
+
+' ========== RELATIONSHIPS ==========
+ExpressApp --> AuthRoutes
+ExpressApp --> WebRoutes
+ExpressApp --> APIRoutes
+ExpressApp --> AuditMiddleware
+ExpressApp --> Views
+
+WebRoutes --> AuthController
+WebRoutes --> DashboardController
+WebRoutes --> GuruController
+WebRoutes --> HalaqohController
+WebRoutes --> SantriController
+WebRoutes --> UsersController
+WebRoutes --> DeleteRequestsController
+WebRoutes --> LogsController
+
+APIRoutes --> UsersAPIController
+APIRoutes --> GuruAPIController
+APIRoutes --> HalaqohAPIController
+APIRoutes --> SantriAPIController
+APIRoutes --> ClusteringAPIController
+APIRoutes --> DeleteRequestsAPIController
+
+AuthController --> AuthService
+AuthController --> Database
+DashboardController --> Database
+DashboardController --> ClusteringService
+GuruController --> Database
+HalaqohController --> Database
+SantriController --> Database
+SantriController --> QuranService
+UsersController --> Database
+UsersController --> AuthService
+LogsController --> Database
+DeleteRequestsController --> Database
+
+ClusteringAPIController --> ClusteringService
+ClusteringAPIController --> Database
+GuruAPIController --> Database
+HalaqohAPIController --> Database
+SantriAPIController --> Database
+UsersAPIController --> Database
+DeleteRequestsAPIController --> Database
+
+AuthMiddleware --> Database
+AuditMiddleware --> Database
+
+ClusteringAPIController ..> ClusteringScript : spawns
+
+' ========== DATABASE RELATIONS ==========
+User "1" --o "*" Santri : user_id
+Guru "1" --o "*" Halaqoh : guru_id
+Guru "1" --o "*" Santri : guru_id
+Halaqoh "1" --o "*" Santri : halaqoh_id
+Santri "1" -- "1" DeleteRequest : santri_id
+User "1" --o "*" DeleteRequest : requested_by
+User "1" --o "*" Notification : user_id
+User "1" --o "*" Log : user_id
+
+@enduml

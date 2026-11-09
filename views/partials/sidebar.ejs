@@ -8,21 +8,24 @@
       <!-- Main Menu -->
       <div class="p-2 fw-700" style="color:var(--text-secondary); font-size:12px; text-transform:uppercase; border-top:1px solid #f0f0f0; margin-top:10px;">Menu Utama</div>
       <a href="/" class="list-group-item list-group-item-action <% if (pathname === '/') { %>active<% } %>"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+      <% if (session.role !== 'guru_tahfizh') { %>
       <a href="/dataset" class="list-group-item list-group-item-action <% if (pathname === '/dataset') { %>active<% } %>"><i class="bi bi-table me-2"></i>Dataset</a>
       <a href="/clustering" class="list-group-item list-group-item-action <% if (pathname === '/clustering') { %>active<% } %>"><i class="bi bi-graph-up me-2"></i>Clustering</a>
+      <% } %>
       <a href="/result" class="list-group-item list-group-item-action <% if (pathname === '/result') { %>active<% } %>"><i class="bi bi-pie-chart me-2"></i>Hasil Analisis</a>
 
       <!-- Data Management -->
       <div class="p-2 fw-700" style="color:var(--text-secondary); font-size:12px; text-transform:uppercase; border-top:1px solid #f0f0f0; margin-top:10px;">Manajemen Data</div>
       <a href="/santri" class="list-group-item list-group-item-action <% if (pathname === '/santri') { %>active<% } %>"><i class="bi bi-people me-2"></i>Santri</a>
-      <a href="/guru" class="list-group-item list-group-item-action <% if (pathname === '/guru') { %>active<% } %>"><i class="bi bi-person-check me-2"></i>Guru</a>
+      <a href="/tahsin" class="list-group-item list-group-item-action <% if (pathname && pathname.indexOf('/tahsin') === 0) { %>active<% } %>"><i class="bi bi-journal-check me-2"></i>Tahsin</a>
       <a href="/halaqoh" class="list-group-item list-group-item-action <% if (pathname === '/halaqoh') { %>active<% } %>"><i class="bi bi-building me-2"></i>Halaqoh</a>
+      <a href="/guru" class="list-group-item list-group-item-action <% if (pathname === '/guru') { %>active<% } %>"><i class="bi bi-person-check me-2"></i>Guru</a>
 
       <!-- Admin Menu -->
       <% if (session.role === 'admin') { %>
         <div class="p-2 fw-700" style="color:var(--text-secondary); font-size:12px; text-transform:uppercase; border-top:1px solid #f0f0f0; margin-top:10px; color:#e74c3c;">Administrasi</div>
         <a href="/delete-requests" class="list-group-item list-group-item-action <% if (pathname === '/delete-requests') { %>active<% } %>"><i class="bi bi-trash me-2"></i>Delete Requests</a>
-        <a href="/users" class="list-group-item list-group-item-action <% if (pathname === '/users') { %>active<% } %>"><i class="bi bi-shield-lock me-2"></i>Users & Role</a>
+        <a href="/users" class="list-group-item list-group-item-action <% if (pathname === '/users') { %>active<% } %>"><i class="bi bi-shield-lock me-2"></i>Users &amp; Role</a>
         <a href="/logs" class="list-group-item list-group-item-action <% if (pathname === '/logs') { %>active<% } %>"><i class="bi bi-clock-history me-2"></i>Audit Log</a>
       <% } %>
     <% } else { %>

@@ -66,7 +66,13 @@ app.use('/', authRouter);
 app.use('/', audit, webRouter);
 app.use('/api', audit, apiRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// 404 - halaman tidak ditemukan
+app.use((req, res) => res.status(404).render('error', {
+  title: 'Halaman Tidak Ditemukan', code: 404,
+  message: 'Halaman yang Anda cari tidak ditemukan atau sudah dipindahkan.'
+}));
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
 module.exports = app;

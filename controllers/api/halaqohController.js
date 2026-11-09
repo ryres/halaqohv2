@@ -1,12 +1,12 @@
 const pool = require('../../config/database');
 
 exports.list = async (req, res) => {
-  const [rows] = await pool.query(`SELECT h.*, COUNT(s.id) as jumlah_santri FROM halaqoh h LEFT JOIN santri s ON s.halaqoh_id = h.id GROUP BY h.id ORDER BY h.id DESC`);
+  const [rows] = await pool.query(`SELECT h.*, COUNT(s.id) as jumlah_santri FROM halaqoh h LEFT JOIN santri s ON s.halaqoh_id = h.id WHERE h.is_deleted = 0 GROUP BY h.id ORDER BY h.id DESC`);
   res.json(rows);
 };
 
 exports.get = async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM halaqoh WHERE id = ?', [req.params.id]);
+  const [rows] = await pool.query('SELECT * FROM halaqoh WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json(rows[0] || null);
 };
 
@@ -23,6 +23,6 @@ exports.update = async (req, res) => {
 };
 
 exports.remove = async (req, res) => {
-  await pool.query('DELETE FROM halaqoh WHERE id = ?', [req.params.id]);
+  await pool.query('UPDATE halaqoh SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json({ ok: true });
 };

@@ -3,16 +3,13 @@
     <h5 class="mb-0"><i class="bi bi-building me-2"></i>Manajemen Halaqoh</h5>
   </div>
   <div class="card-body">
-    <% if (typeof error !== 'undefined' && error) { %>
-      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-x-circle me-2"></i><%= error %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    <% } %>
-    <% if (typeof success !== 'undefined' && success) { %>
-      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><%= success %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    <% } %>
 
+
+    <% if (session && session.role === 'admin') { %>
     <button class="btn btn-primary btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#addHalaqohModal">
       <i class="bi bi-plus me-1"></i>Tambah Halaqoh
     </button>
+    <% } %>
 
     <div class="table-responsive">
       <table class="table table-hover table-sm">
@@ -24,7 +21,7 @@
             <th>Ruangan</th>
             <th>Jadwal</th>
             <th>Jumlah Santri</th>
-            <th>Action</th>
+            <% if (session && session.role === 'admin') { %><th>Action</th><% } %>
           </tr>
         </thead>
         <tbody>
@@ -36,6 +33,7 @@
               <td><%= h.ruangan %></td>
               <td><%= h.jadwal %></td>
               <td><span class="badge bg-primary"><%= h.jumlah_santri %></span></td>
+              <% if (session && session.role === 'admin') { %>
               <td>
                 <div class="d-flex flex-wrap gap-1">
                   <a href="/halaqoh/<%= h.id %>" class="btn btn-outline-primary btn-sm">Edit</a>
@@ -44,10 +42,11 @@
                   </form>
                 </div>
               </td>
+              <% } %>
             </tr>
           <% }); %>
           <% if (halaqohs.length === 0) { %>
-            <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Belum ada data halaqoh</td></tr>
+            <tr><td colspan="<%= session && session.role === 'admin' ? 7 : 6 %>" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Belum ada data halaqoh</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -56,6 +55,7 @@
 </div>
 
 <!-- Modal -->
+<% if (session && session.role === 'admin') { %>
 <div class="modal fade" id="addHalaqohModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -95,3 +95,4 @@
     </div>
   </div>
 </div>
+<% } %>

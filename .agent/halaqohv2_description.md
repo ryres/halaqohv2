@@ -13,20 +13,18 @@ High-level architecture
   - `controllers/api/` - JSON APIs for operations like clustering, managing users, santri, halaqoh, etc.
   - `controllers/web/` - controllers that render EJS pages and handle web routes.
 - Routes: `routes/` organizes API and web routes; top-level route files are `routes/web.js`, `routes/api.js`, `routes/auth.js` and sub-route files under `routes/api/`.
-- Services: business logic and algorithms in `services/` (notably `clustering.js` for K-Means).
+- Services: business logic used by the application.
 - Middleware: `middleware/` holds authentication and audit middlewares.
 - Config: `config/database.js` sets up DB connection (MySQL pool) used across controllers.
 
 Key modules and responsibilities
 
-1. `services/clustering.js`
-   - Implements a K-Means algorithm using Manhattan distance.
-   - Functions include: `manhattanDistance`, `randomCentroids`, `assignClusters`, `updateCentroids`, `silhouetteScore`, and `kmeans`.
-   - `kmeans` returns: `{ clusters, centroids, silhouette, assignments, points }` where `clusters` maps cluster index to member IDs, `assignments` is an array of cluster indexes per input data index, and `points` is simplified array with `id`, `features`, and assigned `cluster`.
+1. `scripts/clustering_python_1.py`
+   - Runs the clustering algorithm with NumPy and reads/writes JSON through standard input/output.
 
 2. `controllers/api/clusteringController.js`
    - Fetches `santri` records (fields: `juz`, `tajwid`, `kelancaran`, `makhraj`) and maps them to feature vectors.
-   - Calls `services.clustering.kmeans` and computes `clusterStats` including labeled categories (Tinggi/Menengah/Rendah) based on `avgScore`.
+   - Calls the Python runner and computes `clusterStats` including labeled categories (Tinggi/Menengah/Rendah) based on `avgScore`.
    - Prepares `points` array used by frontend; stores clustering result in sessionStorage from frontend.
 
 3. Views and Frontend
@@ -53,8 +51,8 @@ Developer notes and potential improvements
 
 - Sorting: The frontend sorts `points` by `label`, `name`, or `cluster` client-side. Recent fixes improved cluster sorting stability and NaN handling. Consider moving sorting to server-side when results are large.
 - PDF generation: The UI offers client-side PDF generation using `jspdf` and `jspdf-autotable`. For large exports or better styling, consider server-side PDF generation.
-- K-Means: The current implementation uses Manhattan distance and random centroid initialization. For reproducible results, consider allowing seeded initialization (kmeans++ or deterministic sampling).
-- Tests: Add unit tests for `services/clustering.js` (edge cases: empty dataset, clusters with zero members, silhouette computation correctness).
+- Clustering: The implementation uses Manhattan distance and seeded random initialization.
+- Tests: Add unit tests for the Python runner (edge cases: empty dataset, clusters with zero members, silhouette computation correctness).
 - UX: Consider pagination or virtual scrolling in the `result` table for many santri.
 
 How to run locally (developer)
@@ -81,7 +79,7 @@ Files of interest (quick map)
 - `index.js` - app entry
 - `config/database.js` - DB pool
 - `controllers/api/clusteringController.js` - clustering API
-- `services/clustering.js` - K-Means implementation
+- `scripts/clustering_python_1.py` - clustering implementation
 - `views/dashboard/clustering.ejs` - run UI
 - `views/dashboard/result.ejs` - results UI + sorting logic
 - `public/js/clustering-frontend.js` - frontend helpers

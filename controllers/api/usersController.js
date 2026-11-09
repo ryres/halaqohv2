@@ -2,12 +2,12 @@ const pool = require('../../config/database');
 const bcrypt = require('bcryptjs');
 
 exports.list = async (req, res) => {
-  const [rows] = await pool.query('SELECT id, username, role, created_at FROM users ORDER BY id DESC');
+  const [rows] = await pool.query('SELECT id, username, role, created_at FROM users WHERE is_deleted = 0 ORDER BY id DESC');
   res.json(rows);
 };
 
 exports.get = async (req, res) => {
-  const [rows] = await pool.query('SELECT id, username, role, created_at FROM users WHERE id = ?', [req.params.id]);
+  const [rows] = await pool.query('SELECT id, username, role, created_at FROM users WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json(rows[0] || null);
 };
 
@@ -30,6 +30,6 @@ exports.update = async (req, res) => {
 };
 
 exports.remove = async (req, res) => {
-  await pool.query('DELETE FROM users WHERE id = ?', [req.params.id]);
+  await pool.query('UPDATE users SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json({ ok: true });
 };

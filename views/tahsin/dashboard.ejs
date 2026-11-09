@@ -1,0 +1,182 @@
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-0"><i class="bi bi-journal-check me-2"></i>Dashboard Pemantauan Tahsin</h4>
+    <small class="text-muted">Rekap capaian per indikator, per halaqoh &amp; perkembangan thalibah dari waktu ke waktu</small>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    <form method="get" class="d-flex">
+      <select name="halaqoh_id" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">Semua Halaqoh</option>
+        <% halaqohs.forEach(function(h){ %>
+          <option value="<%= h.id %>" <%= (String(halaqohFilter) === String(h.id)) ? 'selected' : '' %>><%= h.nama_halaqoh %></option>
+        <% }); %>
+      </select>
+    </form>
+    <a href="/tahsin/input<%= halaqohFilter ? '?halaqoh_id=' + halaqohFilter : '' %>" class="btn btn-primary btn-sm text-nowrap"><i class="bi bi-pencil-square me-1"></i>Input Penilaian</a>
+  </div>
+</div>
+
+<% if (error) { %><% } %>
+<% if (success) { %><% } %>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Sudah dikuasai</div>
+      <div class="fs-3 fw-bold text-success"><%= cardCounts[4] %></div>
+      <div class="small text-muted"><%= totalSantri ? ((cardCounts[4]/totalSantri)*100).toFixed(1) : '0.0' %>%</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Dalam proses perkembangan</div>
+      <div class="fs-3 fw-bold" style="color:#e0a800"><%= cardCounts[3] %></div>
+      <div class="small text-muted"><%= totalSantri ? ((cardCounts[3]/totalSantri)*100).toFixed(1) : '0.0' %>%</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Perlu bimbingan</div>
+      <div class="fs-3 fw-bold text-warning"><%= cardCounts[2] %></div>
+      <div class="small text-muted"><%= totalSantri ? ((cardCounts[2]/totalSantri)*100).toFixed(1) : '0.0' %>%</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">Belum dikuasai</div>
+      <div class="fs-3 fw-bold text-danger"><%= cardCounts[1] %></div>
+      <div class="small text-muted"><%= totalSantri ? ((cardCounts[1]/totalSantri)*100).toFixed(1) : '0.0' %>%</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="alert alert-light border small mb-3">
+  <i class="bi bi-info-circle me-1"></i> Total thalibah dipantau: <strong><%= totalSantri %></strong>
+  &middot; <span class="text-success">■</span> Sudah dikuasai
+  &middot; <span style="color:#e0a800">■</span> Dalam proses
+  &middot; <span class="text-warning">■</span> Perlu bimbingan
+  &middot; <span class="text-danger">■</span> Belum dikuasai
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Grafik status capaian per indikator</div>
+      <div class="card-body"><canvas id="chartIndikator" height="200"></canvas></div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">Rata-rata skor per kelompok (halaqoh / kelas)</div>
+      <div class="card-body"><canvas id="chartHalaqoh" height="200"></canvas></div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Perkembangan thalibah dari waktu ke waktu (rata-rata skor)</div>
+      <div class="card-body"><canvas id="chartTrend" height="110"></canvas></div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Penilaian terbaru</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light"><tr><th>Tanggal</th><th>Thalibah</th><th>Halaqoh</th><th>Makharijul</th><th>Tajwid</th><th>Kelancaran</th><th></th></tr></thead>
+            <tbody>
+              <% if (!recent.length) { %><tr><td colspan="7" class="text-center text-muted py-3">Belum ada data penilaian.</td></tr><% } %>
+              <% recent.forEach(function(r){ %>
+                <tr>
+                  <td><%= r.tanggal_str %></td>
+                  <td><%= r.santri_nama %></td>
+                  <td><%= r.nama_halaqoh || '-' %></td>
+                  <td><span class="badge bg-light text-dark"><%= STATUS_LABELS[r.makharijul] %></span></td>
+                  <td><span class="badge bg-light text-dark"><%= STATUS_LABELS[r.tajwid] %></span></td>
+                  <td><span class="badge bg-light text-dark"><%= STATUS_LABELS[r.kelancaran] %></span></td>
+                  <td><a class="btn btn-sm btn-outline-secondary" href="/tahsin/santri/<%= r.santri_id %>">Detail</a></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATUS_LABELS = <%- JSON.stringify(STATUS_LABELS) %>;
+const INDICATORS = <%- JSON.stringify(INDICATORS) %>;
+const PER_INDICATOR = <%- JSON.stringify(perIndicator) %>;
+const PER_HALAOH = <%- JSON.stringify(perHalaqoh) %>;
+const TREND = <%- JSON.stringify(trend) %>;
+const COLORS = { 4: '#28a745', 3: '#ffc107', 2: '#fd7e14', 1: '#dc3545' };
+
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.Chart) return;
+
+  // 1) Stacked horizontal bar per indikator
+  const datasetsIndikator = [4, 3, 2, 1].map(function (s) {
+    return {
+      label: STATUS_LABELS[s],
+      data: INDICATORS.map(function (i) { return (PER_INDICATOR[i.key] || {})[s] || 0; }),
+      backgroundColor: COLORS[s],
+      borderRadius: 3,
+    };
+  });
+  new Chart(document.getElementById('chartIndikator'), {
+    type: 'bar',
+    data: { labels: INDICATORS.map(function (i) { return i.label; }), datasets: datasetsIndikator },
+    options: {
+      indexAxis: 'y', responsive: true,
+      scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }, y: { stacked: true } },
+      plugins: { legend: { position: 'bottom' } },
+    },
+  });
+
+  // 2) Rata-rata per halaqoh
+  new Chart(document.getElementById('chartHalaqoh'), {
+    type: 'bar',
+    data: {
+      labels: PER_HALAOH.map(function (h) { return h.nama; }),
+      datasets: INDICATORS.map(function (i, idx) {
+        return {
+          label: i.label,
+          data: PER_HALAOH.map(function (h) { return h[i.key]; }),
+          backgroundColor: ['#0d6efd', '#6f42c1', '#20c997'][idx],
+          borderRadius: 3,
+        };
+      }),
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 4, ticks: { stepSize: 1 } } },
+      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + c.parsed.y + ' / 4'; } } } },
+    },
+  });
+
+  // 3) Trend dari waktu ke waktu
+  new Chart(document.getElementById('chartTrend'), {
+    type: 'line',
+    data: {
+      labels: TREND.labels,
+      datasets: INDICATORS.map(function (i, idx) {
+        return {
+          label: i.label,
+          data: TREND[i.key],
+          borderColor: ['#0d6efd', '#6f42c1', '#20c997'][idx],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 3,
+        };
+      }),
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 4, ticks: { stepSize: 1 } } },
+      plugins: { legend: { position: 'bottom' } },
+    },
+  });
+});
+</script>

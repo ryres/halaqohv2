@@ -9,7 +9,7 @@ exports.loginForm = (req, res) => {
 exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE username = ? AND is_deleted = 0', [username]);
     const user = rows[0];
     if (!user) return res.render('auth/login', { error: 'Invalid credentials', layout: 'layouts/login' });
 

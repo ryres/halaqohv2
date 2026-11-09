@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 exports.list = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, username, role, created_at FROM users ORDER BY id DESC');
+    const [rows] = await pool.query('SELECT id, username, role, created_at FROM users WHERE is_deleted = 0 ORDER BY id DESC');
     res.render('admin/users', { 
       users: rows,
       success: req.query.success || null,
@@ -48,7 +48,7 @@ exports.delete = async (req, res) => {
     return res.redirect('/users');
   }
   try {
-    await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    await pool.query('UPDATE users SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [id]);
     req.session.flash = { type: 'success', message: 'User berhasil dihapus.' };
     res.redirect('/users');
   } catch (err) {

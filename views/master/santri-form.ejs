@@ -3,65 +3,82 @@
     <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Santri: <%= santri.nama %></h5>
   </div>
   <div class="card-body">
-    <form method="post" action="/santri/<%= santri.id %>">
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label fw-semibold">Nama</label>
+    <form method="post" action="/santri/<%= santri.id %>" onsubmit="return validateSantriForm(this)">
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Nama</label>
+        <div class="col-md-9">
           <input type="text" name="nama" class="form-control" value="<%= santri.nama %>" required />
         </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label fw-semibold">Kelas</label>
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Kelas</label>
+        <div class="col-md-9">
           <input type="text" name="kelas" class="form-control" value="<%= santri.kelas || '' %>" />
         </div>
       </div>
-      
-      <div class="row">
-        <div class="col-md-3 mb-3">
-          <label class="form-label fw-semibold">Juz</label>
-          <select name="juz" class="form-control" data-selected="<%= santri.juz || '' %>"></select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label fw-semibold">Surat</label>
-          <select name="surat" class="form-control" data-selected="<%= santri.surat || '' %>"></select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label fw-semibold">Ayat</label>
-          <select name="ayat" class="form-control" data-selected="<%= santri.ayat || '' %>"></select>
-        </div>
-        <div class="col-md-3 mb-3">
-          <label class="form-label fw-semibold">Target Juz (0-30)</label>
-          <input type="number" name="target_juz" class="form-control" min="0" max="30" value="<%= santri.target_juz || '' %>" />
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Juz</label>
+        <div class="col-md-9">
+          <select name="juz" class="form-select" data-selected="<%= santri.juz || '' %>" required></select>
         </div>
       </div>
-
-      <div class="row">
-        <div class="col-md-4 mb-3">
-          <label class="form-label fw-semibold">Tajwid (0-100)</label>
-          <input type="number" name="tajwid" class="form-control" min="0" max="100" value="<%= santri.tajwid || 0 %>" />
-        </div>
-        <div class="col-md-4 mb-3">
-          <label class="form-label fw-semibold">Kelancaran (0-100)</label>
-          <input type="number" name="kelancaran" class="form-control" min="0" max="100" value="<%= santri.kelancaran || 0 %>" />
-        </div>
-        <div class="col-md-4 mb-3">
-          <label class="form-label fw-semibold">Makhraj (0-100)</label>
-          <input type="number" name="makhraj" class="form-control" min="0" max="100" value="<%= santri.makhraj || 0 %>" />
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Surat</label>
+        <div class="col-md-9">
+          <select name="surat" class="form-select" data-selected="<%= santri.surat || '' %>" required></select>
         </div>
       </div>
-
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label fw-semibold">Halaqoh</label>
-          <select name="halaqoh_id" class="form-control">
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Ayat dari</label>
+        <div class="col-md-9">
+          <select name="ayat_from" class="form-select" data-selected="<%= santri.ayat_from || santri.ayat || '' %>" required></select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Sampai Ayat</label>
+        <div class="col-md-9">
+          <select name="ayat_to" class="form-select" data-selected="<%= santri.ayat_to || santri.ayat || '' %>" required></select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-3">
+          <label class="col-md-3 col-form-label fw-semibold text-md-end">Target Juz (1-30)</label>
+        <div class="col-md-9">
+          <input type="number" name="target_juz" class="form-control" min="1" max="30" value="<%= santri.target_juz || '' %>" />
+        </div>
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Tajwid (0-100) <span class="text-danger">*</span></label>
+        <div class="col-md-9">
+          <input type="number" name="tajwid" class="form-control" min="0" max="100" value="<%= santri.tajwid ?? '' %>" required />
+        </div>
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Kelancaran (0-100) <span class="text-danger">*</span></label>
+        <div class="col-md-9">
+          <input type="number" name="kelancaran" class="form-control" min="0" max="100" value="<%= santri.kelancaran ?? '' %>" required />
+        </div>
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Makhraj (0-100) <span class="text-danger">*</span></label>
+        <div class="col-md-9">
+          <input type="number" name="makhraj" class="form-control" min="0" max="100" value="<%= santri.makhraj ?? '' %>" required />
+        </div>
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Halaqoh</label>
+        <div class="col-md-9">
+          <select name="halaqoh_id" class="form-select">
             <option value="">-- Pilih Halaqoh --</option>
             <% halaqohs.forEach(h => { %>
               <option value="<%= h.id %>" <%= santri.halaqoh_id == h.id ? 'selected' : '' %>><%= h.nama_halaqoh %></option>
             <% }); %>
           </select>
         </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label fw-semibold">Guru</label>
-          <select name="guru_id" class="form-control">
+      </div>
+      <div class="row align-items-center mb-3">
+        <label class="col-md-3 col-form-label fw-semibold text-md-end">Guru</label>
+        <div class="col-md-9">
+          <select name="guru_id" class="form-select">
             <option value="">-- Pilih Guru --</option>
             <% gurus.forEach(g => { %>
               <option value="<%= g.id %>" <%= santri.guru_id == g.id ? 'selected' : '' %>><%= g.nama %></option>
@@ -85,43 +102,53 @@
   function initSelects() {
     const juzSelect = document.querySelector('select[name="juz"]');
     const suratSelect = document.querySelector('select[name="surat"]');
-    const ayatSelect = document.querySelector('select[name="ayat"]');
+    const ayatFromSelect = document.querySelector('select[name="ayat_from"]');
+    const ayatToSelect = document.querySelector('select[name="ayat_to"]');
 
+    // Initialize Juz dropdown
     if (juzSelect) {
-      const selectedJuz = juzSelect.getAttribute('data-selected');
+      const selectedJuz = parseInt(juzSelect.getAttribute('data-selected')) || 0;
       juzSelect.innerHTML = '<option value="">-- Pilih Juz --</option>';
       for (let i = 1; i <= 30; i++) {
-        juzSelect.innerHTML += `<option value="${i}" ${selectedJuz == i ? 'selected' : ''}>${i}</option>`;
+        juzSelect.innerHTML += `<option value="${i}" ${selectedJuz === i ? 'selected' : ''}>${i}</option>`;
       }
     }
 
+    // Initialize Surat dropdown
     if (suratSelect) {
-      const selectedSurat = suratSelect.getAttribute('data-selected');
+      const selectedSurat = suratSelect.getAttribute('data-selected') || '';
       suratSelect.innerHTML = '<option value="">-- Pilih Surat --</option>';
       surahs.forEach((s) => {
-        suratSelect.innerHTML += `<option value="${s.name}" ${selectedSurat == s.name ? 'selected' : ''}>${s.name}</option>`;
+        suratSelect.innerHTML += `<option value="${s.name}" ${selectedSurat === s.name ? 'selected' : ''}>${s.name}</option>`;
       });
 
+      // Change listener untuk update ayat options
       suratSelect.addEventListener('change', function() {
         updateAyatSelect(this.value);
       });
       
-      if (selectedSurat && ayatSelect) {
-        updateAyatSelect(selectedSurat, ayatSelect.getAttribute('data-selected'));
-      } else if (!selectedSurat && ayatSelect) {
-        ayatSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+      // Jika surat sudah dipilih saat load, populate ayat options
+      if (selectedSurat && ayatFromSelect && ayatToSelect) {
+        const selectedFrom = parseInt(ayatFromSelect.getAttribute('data-selected')) || 0;
+        const selectedTo = parseInt(ayatToSelect.getAttribute('data-selected')) || 0;
+        updateAyatSelect(selectedSurat, selectedFrom, selectedTo);
+      } else if (ayatFromSelect && ayatToSelect) {
+        ayatFromSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+        ayatToSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
       }
     }
     
-    function updateAyatSelect(suratName, selectedAyat = null) {
-      if (!ayatSelect) return;
-      ayatSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+    function updateAyatSelect(suratName, selectedFrom = 0, selectedTo = 0) {
+      if (!ayatFromSelect || !ayatToSelect) return;
+      ayatFromSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
+      ayatToSelect.innerHTML = '<option value="">-- Pilih Ayat --</option>';
       if (!suratName) return;
       
       const surahData = surahs.find(s => s.name === suratName);
       if (surahData) {
         for (let i = 1; i <= surahData.ayahs; i++) {
-          ayatSelect.innerHTML += `<option value="${i}" ${selectedAyat == i ? 'selected' : ''}>${i}</option>`;
+          ayatFromSelect.innerHTML += `<option value="${i}" ${selectedFrom === i ? 'selected' : ''}>${i}</option>`;
+          ayatToSelect.innerHTML += `<option value="${i}" ${selectedTo === i ? 'selected' : ''}>${i}</option>`;
         }
       }
     }
@@ -129,4 +156,25 @@
 
   document.addEventListener('DOMContentLoaded', initSelects);
 })();
+</script>
+<script>
+function validateSantriForm(form) {
+  const toInt = (v) => { const n = parseInt(v,10); return Number.isNaN(n) ? null : n; };
+  const juz = toInt(form.juz && form.juz.value);
+  const ayatFrom = toInt(form.ayat_from && form.ayat_from.value);
+  const ayatTo = toInt(form.ayat_to && form.ayat_to.value);
+  const tajwid = toInt(form.tajwid && form.tajwid.value);
+  const kelancaran = toInt(form.kelancaran && form.kelancaran.value);
+  const makhraj = toInt(form.makhraj && form.makhraj.value);
+  const targetJuz = toInt(form.target_juz && form.target_juz.value);
+
+  if (juz !== null && (juz < 1 || juz > 30)) { alert('Nilai Juz harus antara 1 dan 30'); return false; }
+  if (ayatFrom !== null && ayatFrom < 1) { alert('Nilai Ayat dari tidak valid'); return false; }
+  if (ayatTo !== null && ayatTo < 1) { alert('Nilai sampai ayat tidak valid'); return false; }
+  if (ayatFrom !== null && ayatTo !== null && ayatTo < ayatFrom) { alert('Nilai sampai ayat tidak boleh lebih kecil dari ayat dari'); return false; }
+  const invalid100 = v => v !== null && (v < 0 || v > 100);
+  if (invalid100(tajwid) || invalid100(kelancaran) || invalid100(makhraj)) { alert('Nilai Tajwid, Kelancaran, atau Makhraj harus antara 0 dan 100'); return false; }
+  if (targetJuz !== null && (targetJuz < 1 || targetJuz > 30)) { alert('Nilai Target Juz harus antara 1 dan 30'); return false; }
+  return true;
+}
 </script>

@@ -1,0 +1,311 @@
+@startuml Halaqohv2 Class Diagram
+!theme plain
+skinparam backgroundColor #F8F9FA
+skinparam classFontSize 11
+skinparam classFontName Arial
+skinparam arrowColor #333333
+skinparam arrowFontSize 10
+
+skinparam classBackgroundColor<<MODEL>> #FFCCCC
+skinparam classBorderColor<<MODEL>> #CC0000
+skinparam classBackgroundColor<<SERVICE>> #CCFFCC
+skinparam classBorderColor<<SERVICE>> #006600
+skinparam classBackgroundColor<<WEBCONTROLLER>> #CCE5FF
+skinparam classBorderColor<<WEBCONTROLLER>> #004080
+skinparam classBackgroundColor<<APICONTROLLER>> #99CCFF
+skinparam classBorderColor<<APICONTROLLER>> #003366
+skinparam classBackgroundColor<<MIDDLEWARE>> #FFFFCC
+skinparam classBorderColor<<MIDDLEWARE>> #666600
+skinparam classBackgroundColor<<ROUTES>> #E5CCFF
+skinparam classBorderColor<<ROUTES>> #4B0082
+skinparam classBackgroundColor<<APP>> #FF9999
+skinparam classBorderColor<<APP>> #800000
+skinparam classBackgroundColor<<VIEWS>> #CCFFFF
+skinparam classBorderColor<<VIEWS>> #006666
+skinparam classBackgroundColor<<DATABASE>> #FFCC99
+skinparam classBorderColor<<DATABASE>> #804000
+
+title Sistem Halaqohv2 - Class Diagram
+
+' ========== MODELS ==========
+class User <<MODEL>> {
+  +int id
+  +string username
+  +string password
+  +string role
+}
+
+class Guru <<MODEL>> {
+  +int id
+  +string nama
+  +string jabatan
+  +string unit
+}
+
+class Halaqoh <<MODEL>> {
+  +int id
+  +string nama_halaqoh
+  +int guru_id
+  +string ruangan
+  +string jadwal
+}
+
+class Santri <<MODEL>> {
+  +int id
+  +string nama
+  +string kelas
+  +int juz
+  +string surat
+  +int ayat
+  +int tajwid
+  +int kelancaran
+  +int makhraj
+  +int halaqoh_id
+  +int guru_id
+  +int target_juz
+}
+
+class DeleteRequest <<MODEL>> {
+  +int id
+  +int santri_id
+  +int requested_by
+  +enum status
+}
+
+class Log <<MODEL>> {
+  +int id
+  +int user_id
+  +string action
+  +text details
+}
+
+class Notification <<MODEL>> {
+  +int id
+  +int user_id
+  +string title
+  +enum type
+  +boolean is_read
+}
+
+' ========== SERVICES ==========
+class ClusteringService <<SERVICE>> {
+  +kmeans(data, k)
+  +silhouetteScore(...)
+}
+
+class QuranService <<SERVICE>> {
+  +getSurahs()
+}
+
+class AuthService <<SERVICE>> {
+  +hashPassword(password)
+}
+
+class AuditService <<SERVICE>> {
+  +log(...)
+}
+
+' ========== WEB CONTROLLERS ==========
+class AuthController <<WEBCONTROLLER>> {
+  +login()
+  +logout()
+}
+
+class DashboardController <<WEBCONTROLLER>> {
+  +index()
+  +dataset()
+  +clustering()
+}
+
+class GuruController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +update()
+  +delete()
+}
+
+class HalaqohController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +update()
+  +delete()
+}
+
+class SantriController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +update()
+  +requestDelete()
+}
+
+class UsersController <<WEBCONTROLLER>> {
+  +list()
+  +create()
+  +updateRole()
+  +delete()
+}
+
+class LogsController <<WEBCONTROLLER>> {
+  +list()
+}
+
+class DeleteRequestsController <<WEBCONTROLLER>> {
+  +list()
+  +approve()
+  +reject()
+}
+
+' ========== API CONTROLLERS ==========
+class ClusteringAPIController <<APICONTROLLER>> {
+  +process()
+}
+
+class SantriAPIController <<APICONTROLLER>> {
+  +list()
+  +create()
+  +update()
+}
+
+class GuruAPIController <<APICONTROLLER>> {
+  +list()
+  +create()
+  +update()
+  +remove()
+}
+
+class HalaqohAPIController <<APICONTROLLER>> {
+  +list()
+  +create()
+  +update()
+  +remove()
+}
+
+class UsersAPIController <<APICONTROLLER>> {
+  +list()
+  +create()
+  +update()
+  +remove()
+}
+
+class DeleteRequestsAPIController <<APICONTROLLER>> {
+  +list()
+  +approve()
+  +reject()
+}
+
+' ========== MIDDLEWARE ==========
+class AuthMiddleware <<MIDDLEWARE>> {
+  +requireAuth(...)
+  +requireAdminApi(...)
+}
+
+class AuditMiddleware <<MIDDLEWARE>> {
+  +audit(req, res, next)
+}
+
+' ========== ROUTES ==========
+class WebRoutes <<ROUTES>> {
+  +dashboard
+  +guru
+  +halaqoh
+  +santri
+  +users
+  +delete-requests
+  +logs
+}
+
+class APIRoutes <<ROUTES>> {
+  +users
+  +guru
+  +halaqoh
+  +santri
+  +clustering
+  +delete_requests
+}
+
+class AuthRoutes <<ROUTES>> {
+  +login
+  +logout
+}
+
+' ========== APP / CONFIG ==========
+class ExpressApp <<APP>> {
+  +use(routes)
+  +listen(PORT)
+}
+
+class Database <<DATABASE>> {
+  +query(sql, params)
+}
+
+class Views <<VIEWS>> {
+  +auth/login
+  +dashboard/*
+  +master/*
+  +admin/*
+}
+
+class ClusteringScript <<SCRIPT>> {
+  +python clustering_python.py
+}
+
+' ========== CONNECTIONS ==========
+ExpressApp --> AuthRoutes
+ExpressApp --> WebRoutes
+ExpressApp --> APIRoutes
+ExpressApp --> AuditMiddleware
+ExpressApp --> Views
+
+AuthRoutes --> AuthController
+
+WebRoutes --> AuthController
+WebRoutes --> DashboardController
+WebRoutes --> GuruController
+WebRoutes --> HalaqohController
+WebRoutes --> SantriController
+WebRoutes --> UsersController
+WebRoutes --> DeleteRequestsController
+WebRoutes --> LogsController
+
+APIRoutes --> ClusteringAPIController
+APIRoutes --> SantriAPIController
+APIRoutes --> GuruAPIController
+APIRoutes --> HalaqohAPIController
+APIRoutes --> UsersAPIController
+APIRoutes --> DeleteRequestsAPIController
+
+AuthController --> AuthService
+AuthController --> Database
+DashboardController --> ClusteringService
+DashboardController --> Database
+SantriController --> Database
+SantriController --> QuranService
+UsersController --> Database
+UsersController --> AuthService
+LogsController --> Database
+DeleteRequestsController --> Database
+
+ClusteringAPIController --> ClusteringService
+ClusteringAPIController --> Database
+SantriAPIController --> Database
+GuruAPIController --> Database
+HalaqohAPIController --> Database
+UsersAPIController --> Database
+DeleteRequestsAPIController --> Database
+
+AuthMiddleware --> Database
+AuditMiddleware --> Database
+
+ClusteringAPIController ..> ClusteringScript : spawns
+
+' ========== DATABASE RELATIONS ==========
+User "1" --o "*" Santri
+Guru "1" --o "*" Halaqoh
+Guru "1" --o "*" Santri
+Halaqoh "1" --o "*" Santri
+Santri "1" -- "1" DeleteRequest
+User "1" --o "*" DeleteRequest
+User "1" --o "*" Notification
+User "1" --o "*" Log
+
+@enduml

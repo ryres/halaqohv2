@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin','user','guru_tahfizh') NOT NULL DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 );
 
 -- ======================================================
@@ -29,6 +31,8 @@ CREATE TABLE IF NOT EXISTS santri (
     target_juz INT DEFAULT 30,
     user_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (halaqoh_id) REFERENCES halaqoh(id) ON DELETE SET NULL,
     FOREIGN KEY (guru_id) REFERENCES guru(id) ON DELETE SET NULL
@@ -53,6 +57,8 @@ CREATE TABLE IF NOT EXISTS halaqoh (
     ruangan VARCHAR(50),
     jadwal VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     FOREIGN KEY (guru_id) REFERENCES guru(id) ON DELETE SET NULL
 );
 
@@ -64,7 +70,9 @@ CREATE TABLE IF NOT EXISTS guru (
     nama VARCHAR(100) NOT NULL,
     jabatan VARCHAR(100),
     unit VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 );
 
 -- ======================================================

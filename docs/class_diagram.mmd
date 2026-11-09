@@ -1,0 +1,348 @@
+classDiagram
+    direction LR
+
+    %% ========== MODELS / DATA ==========
+    class User {
+        +int id
+        +string username
+        +string password
+        +string role
+        +datetime created_at
+    }
+
+    class Guru {
+        +int id
+        +string nama
+        +string jabatan
+        +string unit
+        +datetime created_at
+    }
+
+    class Halaqoh {
+        +int id
+        +string nama_halaqoh
+        +int guru_id
+        +string ruangan
+        +string jadwal
+        +datetime created_at
+    }
+
+    class Santri {
+        +int id
+        +string nama
+        +string kelas
+        +int juz
+        +string surat
+        +int ayat
+        +date setoran_tgl
+        +int tajwid
+        +int kelancaran
+        +int makhraj
+        +int halaqoh_id
+        +int guru_id
+        +int target_juz
+        +int user_id
+        +datetime created_at
+    }
+
+    class DeleteRequest {
+        +int id
+        +int santri_id
+        +int requested_by
+        +text reason
+        +enum status
+        +datetime approved_at
+        +datetime created_at
+    }
+
+    class Log {
+        +int id
+        +int user_id
+        +string username
+        +string action
+        +text details
+        +string ip_address
+        +datetime created_at
+    }
+
+    class Notification {
+        +int id
+        +int user_id
+        +string title
+        +text message
+        +enum type
+        +string link
+        +boolean is_read
+        +datetime created_at
+    }
+
+    %% ========== SERVICES ==========
+    class ClusteringService {
+        +manhattanDistance(a, b)
+        +kmeans(data, k, opts)
+        +silhouetteScore(data, assignments, centroids)
+    }
+
+    class QuranService {
+        +HolyQuranHafsVersion
+        +getSurahs()
+        +getAyahs(surah)
+    }
+
+    class AuthService {
+        +validatePassword(plain, hash)
+        +hashPassword(password)
+    }
+
+    class AuditService {
+        +log(userId, username, action, details, ip)
+    }
+
+    %% ========== WEB CONTROLLERS ==========
+    class AuthController {
+        +loginForm()
+        +login()
+        +logout()
+    }
+
+    class DashboardController {
+        +index()
+        +dataset()
+        +clustering()
+        +result()
+        +importDataset()
+        +deleteDataset()
+    }
+
+    class GuruController {
+        +list()
+        +create()
+        +edit()
+        +update()
+        +delete()
+    }
+
+    class HalaqohController {
+        +list()
+        +create()
+        +edit()
+        +update()
+        +delete()
+    }
+
+    class SantriController {
+        +list()
+        +create()
+        +edit()
+        +update()
+        +requestDelete()
+    }
+
+    class UsersController {
+        +list()
+        +create()
+        +updateRole()
+        +delete()
+    }
+
+    class LogsController {
+        +list()
+    }
+
+    class DeleteRequestsController {
+        +list()
+        +approve()
+        +reject()
+    }
+
+    %% ========== API CONTROLLERS ==========
+    class ClusteringAPIController {
+        +process()
+        +result()
+    }
+
+    class GuruAPIController {
+        +list()
+        +get()
+        +create()
+        +update()
+        +remove()
+    }
+
+    class HalaqohAPIController {
+        +list()
+        +get()
+        +create()
+        +update()
+        +remove()
+    }
+
+    class SantriAPIController {
+        +list()
+        +get()
+        +create()
+        +update()
+        +requestDelete()
+    }
+
+    class UsersAPIController {
+        +list()
+        +get()
+        +create()
+        +update()
+        +remove()
+    }
+
+    class DeleteRequestsAPIController {
+        +list()
+        +approve()
+        +reject()
+    }
+
+    %% ========== MIDDLEWARE ==========
+    class AuthMiddleware {
+        +isAuthenticated(req)
+        +requireAuth(req, res, next)
+        +requireRole(role)
+        +requireAdminApi(req, res, next)
+        +denyGuruTahfizhApi(req, res, next)
+    }
+
+    class AuditMiddleware {
+        +audit(req, res, next)
+    }
+
+    %% ========== ROUTES ==========
+    class WebRoutes {
+        +dashboard
+        +guru
+        +halaqoh
+        +santri
+        +users
+        +delete-requests
+        +logs
+    }
+
+    class APIRoutes {
+        +users
+        +guru
+        +halaqoh
+        +santri
+        +clustering
+        +delete_requests
+    }
+
+    class AuthRoutes {
+        +login
+        +logout
+    }
+
+    %% ========== APP / CONFIG ==========
+    class ExpressApp {
+        +use(middleware)
+        +use(routes)
+        +listen(PORT)
+    }
+
+    class Database {
+        +mysql.createPool(config)
+        +query(sql, params)
+    }
+
+    %% ========== VIEWS ==========
+    class Views {
+        +auth/login
+        +dashboard/index
+        +dashboard/dataset
+        +dashboard/clustering
+        +dashboard/result
+        +master/guru
+        +master/guru-form
+        +master/halaqoh
+        +master/halaqoh-form
+        +master/santri
+        +master/santri-form
+        +admin/users
+        +admin/delete-requests
+        +admin/logs
+        +layouts/main
+        +layouts/login
+        +partials/*
+    }
+
+    %% ========== EXTERNAL / SCRIPTS ==========
+    class ClusteringScript {
+        +python clustering_python.py
+        +python clustering_python_1.py
+    }
+
+    %% ========== RELATIONSHIPS ==========
+    ExpressApp --> AuthRoutes
+    ExpressApp --> WebRoutes
+    ExpressApp --> APIRoutes
+    ExpressApp --> AuditMiddleware
+    ExpressApp --> Views
+
+    WebRoutes --> AuthController
+    WebRoutes --> DashboardController
+    WebRoutes --> GuruController
+    WebRoutes --> HalaqohController
+    WebRoutes --> SantriController
+    WebRoutes --> UsersController
+    WebRoutes --> DeleteRequestsController
+    WebRoutes --> LogsController
+
+    APIRoutes --> UsersAPIController
+    APIRoutes --> GuruAPIController
+    APIRoutes --> HalaqohAPIController
+    APIRoutes --> SantriAPIController
+    APIRoutes --> ClusteringAPIController
+    APIRoutes --> DeleteRequestsAPIController
+
+    AuthController --> AuthService
+    AuthController --> Database
+    DashboardController --> Database
+    DashboardController --> ClusteringService
+    GuruController --> Database
+    HalaqohController --> Database
+    SantriController --> Database
+    SantriController --> QuranService
+    UsersController --> Database
+    UsersController --> AuthService
+    LogsController --> Database
+    DeleteRequestsController --> Database
+
+    ClusteringAPIController --> ClusteringService
+    ClusteringAPIController --> Database
+    GuruAPIController --> Database
+    HalaqohAPIController --> Database
+    SantriAPIController --> Database
+    UsersAPIController --> Database
+    DeleteRequestsAPIController --> Database
+
+    AuthMiddleware --> Database
+    AuditMiddleware --> Database
+
+    ClusteringAPIController ..> ClusteringScript : spawns
+
+    %% ========== DATABASE RELATIONS ==========
+    User "1" --o "*" Santri : user_id
+    Guru "1" --o "*" Halaqoh : guru_id
+    Guru "1" --o "*" Santri : guru_id
+    Halaqoh "1" --o "*" Santri : halaqoh_id
+    Santri "1" -- "1" DeleteRequest : santri_id
+    User "1" --o "*" DeleteRequest : requested_by
+    User "1" --o "*" Notification : user_id
+    User "1" --o "*" Log : user_id
+
+    %% ========== COLOR THEME ==========
+    class User,Guru,Halaqoh,Santri,DeleteRequest,Log,Notification fill:#FFCCCC,stroke:#CC0000,stroke-width:2px
+    class ClusteringService,QuranService,AuthService,AuditService fill:#CCFFCC,stroke:#006600,stroke-width:2px
+    class AuthController,DashboardController,GuruController,HalaqohController,SantriController,UsersController,LogsController,DeleteRequestsController fill:#CCE5FF,stroke:#004080,stroke-width:2px
+    class ClusteringAPIController,GuruAPIController,HalaqohAPIController,SantriAPIController,UsersAPIController,DeleteRequestsAPIController fill:#99CCFF,stroke:#003366,stroke-width:2px
+    class AuthMiddleware,AuditMiddleware fill:#FFFFCC,stroke:#666600,stroke-width:2px
+    class WebRoutes,APIRoutes,AuthRoutes fill:#E5CCFF,stroke:#4B0082,stroke-width:2px
+    class ExpressApp fill:#FF9999,stroke:#800000,stroke-width:3px
+    class Views fill:#CCFFFF,stroke:#006666,stroke-width:2px
+    class Database fill:#FFCC99,stroke:#804000,stroke-width:2px
+    class ClusteringScript fill:#CCFFCC,stroke:#006600,stroke-width:2px

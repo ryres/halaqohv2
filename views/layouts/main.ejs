@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/variables.css">
     <link rel="stylesheet" href="/css/layout.css">
     <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/notify.css">
   </head>
   <body>
     <div class="d-flex" id="wrapper">
@@ -30,7 +31,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/js/clustering-frontend.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <script>
+      if (window.Chart && window.ChartZoom) {
+        Chart.register(window.ChartZoom);
+      }
+    </script>
     <script src="/js/surat.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
@@ -55,6 +62,15 @@
             wrapper.classList.remove('toggled');
           });
         }
+      });
+    </script>
+    <script src="/js/notify.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (!window.Notify) return;
+        var hasInline = document.querySelector('.alert.alert-success, .alert.alert-danger');
+        <% if (typeof success !== 'undefined' && success) { %>if (!hasInline) Notify.success(<%- JSON.stringify(success) %>);<% } %>
+        <% if (typeof error !== 'undefined' && error) { %>if (!hasInline) Notify.error(<%- JSON.stringify(error) %>);<% } %>
       });
     </script>
   </body>

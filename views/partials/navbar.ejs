@@ -1,8 +1,17 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <div class="container-fluid">
     <button class="btn btn-outline-primary px-2 py-1" id="sidebarToggle"><i class="bi bi-list fs-5"></i></button>
-    <div class="ms-auto">
+    <div class="ms-auto d-flex align-items-center">
       <% if (session && session.userId) { %>
+        <div class="hz-bell me-3" id="hzBell">
+          <button type="button" class="hz-bell-btn" id="hzBellBtn" aria-label="Notifikasi" aria-haspopup="true" aria-expanded="false">
+            <i class="bi bi-bell"></i><span class="hz-bell-badge d-none" id="hzBellBadge">0</span>
+          </button>
+          <div class="hz-bell-menu d-none" id="hzBellMenu" role="menu">
+            <div class="hz-bell-head"><span><i class="bi bi-bell me-1"></i>Notifikasi</span><button type="button" id="hzReadAll">Tandai semua dibaca</button></div>
+            <div class="hz-bell-list" id="hzBellList"></div>
+          </div>
+        </div>
         <span class="me-3 text-muted">Hello, <%= session.username %></span>
         <form method="post" action="/logout" style="display:inline">
           <button class="btn btn-outline-secondary btn-sm">Logout</button>
@@ -13,3 +22,64 @@
     </div>
   </div>
 </nav>
+<script>
+(function () {
+  var btn = document.getElementById('hzBellBtn');
+  if (!btn) return;
+  var badge = document.getElementById('hzBellBadge');
+  var menu = document.getElementById('hzBellMenu');
+  var list = document.getElementById('hzBellList');
+  var readAll = document.getElementById('hzReadAll');
+  var DOT = { success: 'success', info: 'info', warning: 'warning', danger: 'danger' };
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function rel(s) {
+    if (!s) return '';
+    var t = new Date(String(s).replace(' ', 'T')).getTime();
+    if (isNaN(t)) return s;
+    var m = Math.floor((Date.now() - t) / 60000);
+    if (m < 1) return 'baru saja';
+    if (m < 60) return m + ' mnt lalu';
+    var h = Math.floor(m / 60); if (h < 24) return h + ' jam lalu';
+    var d = Math.floor(h / 24); if (d < 7) return d + ' hari lalu';
+    return String(s).slice(0, 10);
+  }
+  function render(items) {
+    if (!items || !items.length) { list.innerHTML = '<div class="hz-bell-empty"><i class="bi bi-bell-slash d-block mb-1"></i>Tidak ada notifikasi</div>'; return; }
+    list.innerHTML = items.map(function (n) {
+      var cls = 'hz-nitem' + (n.is_read ? '' : ' unread');
+      var href = n.link ? n.link : '#';
+      return '<a class="' + cls + '" href="' + esc(href) + '" data-id="' + n.id + '">' +
+        '<div class="t"><span class="hz-dot ' + (DOT[n.type] || 'info') + '"></span>' + esc(n.title) + '</div>' +
+        (n.message ? '<div class="m">' + esc(n.message) + '</div>' : '') +
+        '<div class="d">' + esc(rel(n.created_at)) + '</div></a>';
+    }).join('');
+    list.querySelectorAll('.hz-nitem').forEach(function (a) {
+      a.addEventListener('click', function () {
+        var id = a.getAttribute('data-id');
+        if (a.classList.contains('unread')) {
+          fetch('/notifications/read/' + id, { method: 'POST' }).catch(function () {});
+          a.classList.remove('unread');
+          if (badge) { var n = Math.max(0, (parseInt(badge.textContent, 10) || 1) - 1); badge.textContent = n; badge.classList.toggle('d-none', n <= 0); }
+        }
+      });
+    });
+  }
+  function load() {
+    fetch('/notifications/list').then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.ok) return;
+      if (badge) { badge.textContent = j.unread; badge.classList.toggle('d-none', !j.unread); }
+      render(j.items);
+    }).catch(function () {});
+  }
+  function openMenu() { menu.classList.remove('d-none'); btn.setAttribute('aria-expanded', 'true'); load(); }
+  function closeMenu() { menu.classList.add('d-none'); btn.setAttribute('aria-expanded', 'false'); }
+  btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.contains('d-none') ? openMenu() : closeMenu(); });
+  document.addEventListener('click', function (e) { if (!menu.classList.contains('d-none') && !menu.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+  if (readAll) readAll.addEventListener('click', function () {
+    fetch('/notifications/read-all', { method: 'POST' }).then(function () { load(); }).catch(function () {});
+  });
+  load();
+})();
+</script>

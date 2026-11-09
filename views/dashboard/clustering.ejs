@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-12 col-md-6 mb-4">
     <div class="card p-4">
-      <h5><i class="bi bi-graph-up me-2"></i>Jalankan K-Means Clustering</h5>
+      <h5><i class="bi bi-graph-up me-2"></i>Jalankan Clustering</h5>
       <hr>
       <form id="clusteringForm">
         <div class="mb-3">
@@ -16,12 +16,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">Engine Perhitungan</label>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-primary flex-fill" onclick="selectEngine('javascript')" id="engine-js-btn">JavaScript</button>
-            <button type="button" class="btn btn-outline-secondary flex-fill" onclick="selectEngine('python')" id="engine-py-btn">Python</button>
-          </div>
-          <input type="hidden" name="engine" id="engineInput" value="javascript">
-          <small class="text-muted">Pilih JavaScript untuk jalur bawaan, atau Python untuk opsi tambahan.</small>
+          <p class="text-muted mb-0">Python dengan jarak Manhattan.</p>
         </div>
         <button type="button" class="btn btn-primary w-100" onclick="runClustering()">
           <i class="bi bi-play-circle me-2"></i>Jalankan Clustering
@@ -51,7 +46,7 @@
     <div class="card p-4">
       <h5><i class="bi bi-info-circle me-2"></i>Informasi</h5>
       <hr>
-      <p><strong>Algoritma:</strong> K-Means with Manhattan Distance</p>
+      <p><strong>Python:</strong> K-Means dengan Manhattan Distance </p>
       <p><strong>Fitur yang digunakan:</strong></p>
       <ul>
         <li>Juz (Target Capaian)</li>
@@ -69,25 +64,9 @@
 <script>
 let lastClusteringResult = null;
 
-function selectEngine(engine) {
-  const input = document.getElementById('engineInput');
-  const jsBtn = document.getElementById('engine-js-btn');
-  const pyBtn = document.getElementById('engine-py-btn');
-
-  input.value = engine;
-  if (engine === 'python') {
-    pyBtn.className = 'btn btn-primary flex-fill';
-    jsBtn.className = 'btn btn-outline-primary flex-fill';
-  } else {
-    jsBtn.className = 'btn btn-primary flex-fill';
-    pyBtn.className = 'btn btn-outline-secondary flex-fill';
-  }
-}
-
 async function runClustering() {
   const k = document.querySelector('input[name="k"]').value;
   const maxIter = document.querySelector('input[name="maxIter"]').value;
-  const engine = document.getElementById('engineInput').value;
 
   document.getElementById('clusteringLoading').style.display = 'block';
   document.getElementById('clusteringResult').style.display = 'none';
@@ -97,7 +76,7 @@ async function runClustering() {
     const res = await fetch('/api/clustering/process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ k: parseInt(k), maxIter: parseInt(maxIter), engine })
+      body: JSON.stringify({ k: parseInt(k), maxIter: parseInt(maxIter) })
     });
 
     const data = await res.json();
@@ -117,9 +96,4 @@ async function runClustering() {
     document.getElementById('clusteringLoading').style.display = 'none';
   }
 }
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  selectEngine('javascript');
-});
 </script>

@@ -1,0 +1,77 @@
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i><%= santri.nama %></h4>
+    <small class="text-muted">
+      <%= santri.kelas || '-' %> &middot; Halaqoh: <%= santri.nama_halaqoh || '-' %> &middot; Guru: <%= santri.guru_nama || '-' %>
+    </small>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/tahsin/input<%= santri.halaqoh_id ? '?halaqoh_id=' + santri.halaqoh_id : '' %>" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square me-1"></i>Input</a>
+    <a href="/tahsin" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-header bg-white fw-semibold">Perkembangan capaian dari waktu ke waktu</div>
+  <div class="card-body"><canvas id="chartSantri" height="110"></canvas></div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white fw-semibold">Riwayat penilaian &amp; catatan perkembangan</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr><th>Tanggal</th><th>Makharijul huruf</th><th>Penerapan tajwid</th><th>Kelancaran membaca</th><th>Catatan perkembangan</th></tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="5" class="text-center text-muted py-3">Belum ada penilaian untuk thalibah ini.</td></tr>
+          <% } %>
+          <% rows.slice().reverse().forEach(function(r){ %>
+            <tr>
+              <td class="text-nowrap"><%= r.tanggal_str %></td>
+              <% ['makharijul','tajwid','kelancaran'].forEach(function(k){ %>
+                <td>
+                  <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:<%= ({4:'#28a745',3:'#ffc107',2:'#fd7e14',1:'#dc3545'})[r[k]] %>"></span>
+                  <span class="small"><%= STATUS_LABELS[r[k]] %></span>
+                </td>
+              <% }); %>
+              <td class="small text-muted"><%= r.catatan || '-' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const INDICATORS = <%- JSON.stringify(INDICATORS) %>;
+const TREND = <%- JSON.stringify(trend) %>;
+const STATUS_LABELS = <%- JSON.stringify(STATUS_LABELS) %>;
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.Chart) return;
+  new Chart(document.getElementById('chartSantri'), {
+    type: 'line',
+    data: {
+      labels: TREND.labels,
+      datasets: INDICATORS.map(function (i, idx) {
+        return {
+          label: i.label,
+          data: TREND[i.key],
+          borderColor: ['#0d6efd', '#6f42c1', '#20c997'][idx],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 3,
+        };
+      }),
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, max: 4, ticks: { stepSize: 1, callback: function (v) { return STATUS_LABELS[v] || v; } } } },
+      plugins: { legend: { position: 'bottom' } },
+    },
+  });
+});
+</script>

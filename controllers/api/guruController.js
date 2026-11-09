@@ -1,12 +1,12 @@
 const pool = require('../../config/database');
 
 exports.list = async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM guru ORDER BY id DESC');
+  const [rows] = await pool.query('SELECT * FROM guru WHERE is_deleted = 0 ORDER BY id DESC');
   res.json(rows);
 };
 
 exports.get = async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM guru WHERE id = ?', [req.params.id]);
+  const [rows] = await pool.query('SELECT * FROM guru WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json(rows[0] || null);
 };
 
@@ -25,6 +25,6 @@ exports.update = async (req, res) => {
 };
 
 exports.remove = async (req, res) => {
-  await pool.query('DELETE FROM guru WHERE id = ?', [req.params.id]);
+  await pool.query('UPDATE guru SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [req.params.id]);
   res.json({ ok: true });
 };

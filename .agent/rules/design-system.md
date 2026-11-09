@@ -219,18 +219,12 @@ Centered layout untuk desktop.
 
 ## Tujuan
 
-Memberikan pilihan engine clustering kepada pengguna tanpa menghapus alur yang sudah ada. Pengguna dapat memilih antara:
-
-* JavaScript sebagai engine default dan utama
-* Python sebagai opsi tambahan untuk kebutuhan eksperimen atau perhitungan terpisah
+Menjalankan clustering melalui satu engine Python yang konsisten.
 
 ## Rule
 
-* Implementasi JavaScript tetap menjadi jalur yang dipertahankan untuk aplikasi utama.
-* Implementasi Python hanya dipakai saat pengguna memilih opsi Python.
-* Hasil akhir dari kedua engine wajib memiliki format output yang sama agar halaman hasil tetap konsisten.
+* Implementasi Python dipakai untuk seluruh proses clustering aplikasi.
 * Jika Python tidak tersedia atau gagal, sistem harus menampilkan pesan error yang jelas dan tidak merusak alur aplikasi.
-* UI menyediakan tombol pemilihan engine yang sederhana dan tidak membingungkan.
 
 ---
 

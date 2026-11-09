@@ -4,9 +4,9 @@ const fs = require('fs');
 
 exports.index = async (req, res) => {
   try {
-    const [santriRes] = await pool.query('SELECT COUNT(*) as total FROM santri');
-    const [guruRes] = await pool.query('SELECT COUNT(*) as total FROM guru');
-    const [halaqohRes] = await pool.query('SELECT COUNT(*) as total FROM halaqoh');
+    const [santriRes] = await pool.query('SELECT COUNT(*) as total FROM santri WHERE is_deleted = 0');
+    const [guruRes] = await pool.query('SELECT COUNT(*) as total FROM guru WHERE is_deleted = 0');
+    const [halaqohRes] = await pool.query('SELECT COUNT(*) as total FROM halaqoh WHERE is_deleted = 0');
     const [clusterRes] = await pool.query('SELECT COUNT(*) as total FROM delete_requests WHERE status = "pending"');
     
     res.render('dashboard/index', {
@@ -54,8 +54,8 @@ exports.importDataset = async (req, res) => {
       return res.redirect('/dataset');
     }
 
-    const [halaqohs] = await pool.query('SELECT id, nama_halaqoh FROM halaqoh');
-    const [gurus] = await pool.query('SELECT id, nama FROM guru');
+    const [halaqohs] = await pool.query('SELECT id, nama_halaqoh FROM halaqoh WHERE is_deleted = 0');
+    const [gurus] = await pool.query('SELECT id, nama FROM guru WHERE is_deleted = 0');
 
     function findValue(row, keys) {
       for (const key of Object.keys(row)) {
@@ -169,17 +169,25 @@ exports.importDataset = async (req, res) => {
 };
 
 exports.deleteDataset = async (req, res) => {
+  let connection;
   try {
-    await pool.query('DELETE FROM santri');
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    await connection.query('UPDATE delete_requests SET status = ?, approved_at = NOW() WHERE status = ?', ['deleted', 'pending']);
+    await connection.query('UPDATE santri SET is_deleted = 1, deleted_at = NOW() WHERE is_deleted = 0');
     const action = `DELETE ALL DATASET`;
-    const details = JSON.stringify({ userId: req.session.userId, username: req.session.username, message: 'Semua data santri dihapus' });
+    const details = JSON.stringify({ userId: req.session.userId, username: req.session.username, message: 'Semua data santri disembunyikan (soft delete)' });
     const ip = req.ip || req.connection.remoteAddress || null;
-    await pool.query('INSERT INTO logs (user_id, username, action, details, ip_address) VALUES (?, ?, ?, ?, ?)', [req.session.userId, req.session.username, action, details, ip]);
+    await connection.query('INSERT INTO logs (user_id, username, action, details, ip_address) VALUES (?, ?, ?, ?, ?)', [req.session.userId, req.session.username, action, details, ip]);
+    await connection.commit();
     req.session.flash = { type: 'success', message: 'Semua dataset santri berhasil dihapus.' };
     res.redirect('/dataset');
   } catch (err) {
+    if (connection) await connection.rollback();
     console.error(err);
     req.session.flash = { type: 'error', message: `Gagal menghapus dataset: ${err.message}` };
     res.redirect('/dataset');
+  } finally {
+    if (connection) connection.release();
   }
 };

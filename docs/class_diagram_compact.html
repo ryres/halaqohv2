@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<title>Halaqohv2 - Class Diagram Compact</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+  h1 { color: #333; }
+  .legend { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; display: inline-block; }
+  .legend-item { display: inline-block; margin-right: 20px; }
+  .color-box { width: 20px; height: 20px; display: inline-block; border: 2px solid; vertical-align: middle; margin-right: 5px; }
+  .mermaid { background: white; padding: 20px; border-radius: 8px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>Diagram Kelas - Sistem Halaqohv2 (Compact)</h1>
+<div class="mermaid">
+classDiagram
+    direction TB
+
+    class User <<MODEL>> {
+      +id
+      +username
+      +password
+      +role
+    }
+
+    class Guru <<MODEL>> {
+      +id
+      +nama
+      +jabatan
+      +unit
+    }
+
+    class Halaqoh <<MODEL>> {
+      +id
+      +nama_halaqoh
+      +guru_id
+      +ruangan
+      +jadwal
+    }
+
+    class Santri <<MODEL>> {
+      +id
+      +nama
+      +kelas
+      +juz
+      +surat
+      +ayat
+      +tajwid
+      +kelancaran
+      +makhraj
+      +halaqoh_id
+      +guru_id
+      +target_juz
+    }
+
+    class DeleteRequest <<MODEL>> {
+      +id
+      +santri_id
+      +requested_by
+      +status
+    }
+
+    class Log <<MODEL>> {
+      +id
+      +user_id
+      +action
+      +details
+    }
+
+    class Notification <<MODEL>> {
+      +id
+      +user_id
+      +title
+      +type
+      +is_read
+    }
+
+    class ClusteringService <<SERVICE>> {
+      +kmeans(data, k)
+      +silhouetteScore(...)
+    }
+
+    class QuranService <<SERVICE>> {
+      +getSurahs()
+    }
+
+    class AuthService <<SERVICE>> {
+      +hashPassword(password)
+    }
+
+    class AuditService <<SERVICE>> {
+      +log(...)
+    }
+
+    class AuthController <<WEBCONTROLLER>> {
+      +login()
+      +logout()
+    }
+
+    class DashboardController <<WEBCONTROLLER>> {
+      +index()
+      +dataset()
+      +clustering()
+    }
+
+    class SantriController <<WEBCONTROLLER>> {
+      +list()
+      +create()
+      +update()
+      +requestDelete()
+    }
+
+    class HalaqohController <<WEBCONTROLLER>> {
+      +list()
+      +create()
+      +update()
+      +delete()
+    }
+
+    class GuruController <<WEBCONTROLLER>> {
+      +list()
+      +create()
+      +update()
+      +delete()
+    }
+
+    class UsersController <<WEBCONTROLLER>> {
+      +list()
+      +create()
+      +updateRole()
+      +delete()
+    }
+
+    class ClusteringAPIController <<APICONTROLLER>> {
+      +process()
+    }
+
+    class SantriAPIController <<APICONTROLLER>> {
+      +list()
+      +create()
+      +update()
+    }
+
+    class AuthMiddleware <<MIDDLEWARE>> {
+      +requireAuth(...)
+      +requireAdminApi(...)
+    }
+
+    class AuditMiddleware <<MIDDLEWARE>> {
+      +audit(req, res, next)
+    }
+
+    class ExpressApp <<APP>> {
+      +use(routes)
+      +listen(PORT)
+    }
+
+    class Database <<DATABASE>> {
+      +query(sql, params)
+    }
+
+    class Views <<VIEWS>> {
+      +auth/login
+      +dashboard/*
+      +master/*
+      +admin/*
+    }
+
+    ExpressApp --> AuthController
+    ExpressApp --> DashboardController
+    ExpressApp --> SantriController
+    ExpressApp --> HalaqohController
+    ExpressApp --> GuruController
+    ExpressApp --> UsersController
+    ExpressApp --> ClusteringAPIController
+    ExpressApp --> SantriAPIController
+    ExpressApp --> AuthMiddleware
+    ExpressApp --> AuditMiddleware
+    ExpressApp --> Views
+
+    AuthController --> AuthService
+    DashboardController --> ClusteringService
+    SantriController --> QuranService
+    ClusteringAPIController --> ClusteringService
+
+    AuthMiddleware --> Database
+    AuditMiddleware --> Database
+
+    User "1" --o "*" Santri
+    Guru "1" --o "*" Halaqoh
+    Guru "1" --o "*" Santri
+    Halaqoh "1" --o "*" Santri
+    Santri "1" -- "1" DeleteRequest
+    User "1" --o "*" DeleteRequest
+    User "1" --o "*" Notification
+    User "1" --o "*" Log
+
+    class User,Guru,Halaqoh,Santri,DeleteRequest,Log,Notification fill:#FFCCCC,stroke:#CC0000,stroke-width:2px
+    class ClusteringService,QuranService,AuthService,AuditService fill:#CCFFCC,stroke:#006600,stroke-width:2px
+    class AuthController,DashboardController,SantriController,HalaqohController,GuruController,UsersController fill:#CCE5FF,stroke:#004080,stroke-width:2px
+    class ClusteringAPIController,SantriAPIController fill:#99CCFF,stroke:#003366,stroke-width:2px
+    class AuthMiddleware,AuditMiddleware fill:#FFFFCC,stroke:#666600,stroke-width:2px
+    class ExpressApp fill:#FF9999,stroke:#800000,stroke-width:3px
+    class Views fill:#CCFFFF,stroke:#006666,stroke-width:2px
+    class Database fill:#FFCC99,stroke:#804000,stroke-width:2px
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="color-box" style="background:#FFCCCC;border-color:#CC0000"></span>Model / Database</div>
+  <div class="legend-item"><span class="color-box" style="background:#CCFFCC;border-color:#006600"></span>Service</div>
+  <div class="legend-item"><span class="color-box" style="background:#CCE5FF;border-color:#004080"></span>Web Controller</div>
+  <div class="legend-item"><span class="color-box" style="background:#99CCFF;border-color:#003366"></span>API Controller</div>
+  <div class="legend-item"><span class="color-box" style="background:#FFFFCC;border-color:#666600"></span>Middleware</div>
+  <div class="legend-item"><span class="color-box" style="background:#FF9999;border-color:#800000"></span>Express App</div>
+  <div class="legend-item"><span class="color-box" style="background:#CCFFFF;border-color:#006666"></span>Views</div>
+  <div class="legend-item"><span class="color-box" style="background:#FFCC99;border-color:#804000"></span>Database</div>
+</div>
+
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</body>
+</html>

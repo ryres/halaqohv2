@@ -1,0 +1,264 @@
+<% const SHORT = { 1: 'Belum', 2: 'Perlu', 3: 'Proses', 4: 'Dikuasai' }; %>
+<style>
+  .tahsin-bar { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid #e5e7eb; padding: .6rem .75rem; margin: -1rem -1rem .75rem; box-shadow: 0 1px 6px rgba(0,0,0,.04); }
+  .tahsin-table td, .tahsin-table th { vertical-align: middle; }
+  .seg { display: inline-flex; flex-wrap: nowrap; }
+  .seg .btn { padding: .2rem .5rem; font-size: .72rem; line-height: 1.2; border-radius: 0; white-space: nowrap; }
+  .seg .btn:first-child { border-top-left-radius: .375rem; border-bottom-left-radius: .375rem; }
+  .seg .btn:last-child { border-top-right-radius: .375rem; border-bottom-right-radius: .375rem; }
+  .seg .btn + .btn { margin-left: -1px; }
+  .seg-1 { --c: #dc3545; } .seg-2 { --c: #fd7e14; } .seg-3 { --c: #d39e00; } .seg-4 { --c: #28a745; }
+  .seg .btn-check + .btn { color: var(--c); border-color: var(--c); background: #fff; }
+  .seg .btn-check:checked + .btn { background: var(--c); border-color: var(--c); color: #fff; }
+  .seg .btn-check:focus-visible + .btn { box-shadow: 0 0 0 .2rem rgba(0,0,0,.12); }
+  .note-toggle { position: relative; }
+  .note-dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: #0d6efd; }
+  tr.row-done > td { background: #f4fdf6; }
+  tr.note-row > td { background: #fbfbfb; }
+  .auto-grow { resize: vertical; min-height: 34px; }
+  .tahsin-savebar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #e5e7eb; padding: .6rem .75rem; margin: .75rem -1rem -1rem; display: flex; justify-content: space-between; align-items: center; gap: .5rem; box-shadow: 0 -2px 8px rgba(0,0,0,.05); }
+  @media (max-width: 768px) { .seg .btn { font-size: .64rem; padding: .2rem .32rem; } }
+</style>
+
+<div class="tahsin-bar">
+  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-2">
+      <h5 class="mb-0"><i class="bi bi-pencil-square me-1"></i>Input Penilaian Tahsin</h5>
+      <a href="/tahsin" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i><span class="d-none d-md-inline ms-1">Dashboard</span></a>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <form method="get" class="d-flex flex-wrap gap-2 align-items-center mb-0">
+        <select name="halaqoh_id" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+          <option value="">Semua Halaqoh</option>
+          <% halaqohs.forEach(function(h){ %>
+            <option value="<%= h.id %>" <%= (String(halaqohId) === String(h.id)) ? 'selected' : '' %>><%= h.nama_halaqoh %></option>
+          <% }); %>
+        </select>
+        <select name="kelas" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+          <option value="">Semua Kelas</option>
+          <% kelasList.forEach(function(k){ %>
+            <option value="<%= k %>" <%= (kelas === k) ? 'selected' : '' %>><%= k %></option>
+          <% }); %>
+        </select>
+        <input type="text" name="q" value="<%= q %>" class="form-control form-control-sm" placeholder="Cari nama" style="width:120px">
+        <div class="form-check form-check-inline m-0">
+          <input class="form-check-input" type="checkbox" name="belum" value="1" id="chkBelum" <%= belum ? 'checked' : '' %> onchange="this.form.submit()">
+          <label class="form-check-label small" for="chkBelum">Belum dinilai hari ini</label>
+        </div>
+        <button class="btn btn-sm btn-outline-primary">Filter</button>
+      </form>
+      <input type="date" name="tanggal" form="tahsinForm" value="<%= today %>" class="form-control form-control-sm" style="width:auto" title="Tanggal penilaian" required>
+      <span class="badge rounded-pill bg-secondary" id="progressBadge">0/0 terisi</span>
+    </div>
+  </div>
+</div>
+
+<div id="draftBanner" class="alert alert-warning py-2 d-none">
+  <i class="bi bi-save me-1"></i>Ada draf tersimpan untuk filter ini.
+  <button type="button" class="btn btn-sm btn-warning ms-2" id="draftRestore">Pulihkan</button>
+  <button type="button" class="btn btn-sm btn-outline-secondary ms-1" id="draftDiscard">Buang</button>
+</div>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-2 small">
+  <span class="text-muted">Isi cepat semua baris:</span>
+  <button type="button" class="btn btn-sm btn-outline-secondary bulk" data-val="1">Belum</button>
+  <button type="button" class="btn btn-sm btn-outline-secondary bulk" data-val="2">Perlu</button>
+  <button type="button" class="btn btn-sm btn-outline-secondary bulk" data-val="3">Proses</button>
+  <button type="button" class="btn btn-sm btn-outline-secondary bulk" data-val="4">Dikuasai</button>
+  <span class="ms-auto text-muted d-none d-lg-inline"><i class="bi bi-keyboard"></i> Tombol 1–4 = pilih cepat</span>
+</div>
+
+<form id="tahsinForm" method="post" action="/tahsin/input">
+  <input type="hidden" name="halaqoh_id" value="<%= halaqohId || '' %>">
+  <input type="hidden" name="back_query" value="halaqoh_id=<%= halaqohId || '' %>&kelas=<%= encodeURIComponent(kelas || '') %>&q=<%= encodeURIComponent(q || '') %>&belum=<%= belum ? '1' : '' %>">
+
+  <% if (!santris.length) { %>
+    <div class="alert alert-warning">Belum ada thalibah yang cocok. Ubah filter di atas.</div>
+  <% } else { %>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle tahsin-table mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width:34px">#</th>
+          <th>Thalibah</th>
+          <% INDICATORS.forEach(function(ind){ %><th><%= ind.label %></th><% }); %>
+          <th style="width:44px" class="text-center">Catatan</th>
+          <th style="width:82px">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% santris.forEach(function(s, idx){ %>
+        <tr class="tahsin-row" data-sid="<%= s.id %>">
+          <td class="text-muted small"><%= idx + 1 %></td>
+          <td>
+            <div class="fw-semibold"><%= s.nama %></div>
+            <small class="text-muted"><%= s.kelas || '' %></small>
+            <a href="/tahsin/santri/<%= s.id %>" class="ms-1 small" title="Riwayat"><i class="bi bi-clock-history"></i></a>
+          </td>
+          <% INDICATORS.forEach(function(ind){ %>
+            <td>
+              <div class="seg" role="radiogroup" aria-label="<%= ind.label %>">
+                <% [1,2,3,4].forEach(function(v){ %>
+                  <input class="btn-check" type="radio" autocomplete="off"
+                         name="<%= ind.key %>[<%= s.id %>]" id="<%= ind.key %>_<%= s.id %>_<%= v %>"
+                         value="<%= v %>" <%= (s.last && Number(s.last[ind.key]) === v) ? 'checked' : '' %>>
+                  <label class="btn seg-<%= v %>" for="<%= ind.key %>_<%= s.id %>_<%= v %>" title="<%= STATUS_LABELS[v] %>"><%= SHORT[v] %></label>
+                <% }); %>
+              </div>
+            </td>
+          <% }); %>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-secondary note-toggle" data-target="note_<%= s.id %>" title="Tambah/buka catatan">
+              <i class="bi bi-chat-left-text"></i><span class="note-dot d-none"></span>
+            </button>
+          </td>
+          <td><span class="badge bg-light text-dark border status-badge">Belum</span></td>
+        </tr>
+        <tr class="note-row d-none" id="note_<%= s.id %>">
+          <td></td>
+          <td colspan="<%= 3 + INDICATORS.length %>">
+            <textarea class="form-control form-control-sm auto-grow" name="catatan[<%= s.id %>]" rows="1"
+              placeholder="Kemajuan bacaan, aspek yang perlu diperbaiki, tindak lanjut..."><%= (s.last && s.last.catatan) ? s.last.catatan : '' %></textarea>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+
+  <div class="tahsin-savebar">
+    <span class="small text-muted"><span id="progressText">0 dari 0</span> thalibah terisi lengkap</span>
+    <div class="d-flex gap-2">
+      <a href="/tahsin" class="btn btn-outline-secondary btn-sm">Batal</a>
+      <button class="btn btn-primary btn-sm" type="submit" id="saveBtn"><i class="bi bi-save me-1"></i>Simpan Penilaian</button>
+    </div>
+  </div>
+</form>
+
+<script>
+(function () {
+  var form = document.getElementById('tahsinForm');
+  if (!form) return;
+  var IND = ['makharijul', 'tajwid', 'kelancaran'];
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.tahsin-row'));
+  var badge = document.getElementById('progressBadge');
+  var ptext = document.getElementById('progressText');
+  var dirty = false;
+
+  function rowComplete(tr) {
+    return IND.every(function (k) { return tr.querySelector('input[name="' + k + '[' + tr.dataset.sid + ']"]:checked'); });
+  }
+  function updateRow(tr) {
+    var done = rowComplete(tr);
+    tr.classList.toggle('row-done', done);
+    var sb = tr.querySelector('.status-badge');
+    if (sb) { sb.textContent = done ? 'Terisi' : 'Belum'; sb.className = 'badge status-badge ' + (done ? 'bg-success' : 'bg-light text-dark border'); }
+    var ta = document.querySelector('#note_' + tr.dataset.sid + ' textarea');
+    var dot = tr.querySelector('.note-dot');
+    if (dot) dot.classList.toggle('d-none', !(ta && ta.value.trim()));
+  }
+  function updateProgress() {
+    var done = rows.filter(rowComplete).length;
+    if (badge) { badge.textContent = done + '/' + rows.length + ' terisi'; badge.className = 'badge rounded-pill ' + (rows.length && done === rows.length ? 'bg-success' : 'bg-secondary'); }
+    if (ptext) ptext.textContent = done + ' dari ' + rows.length;
+  }
+
+  var backQ = (form.querySelector('input[name="back_query"]') || {}).value || '';
+  var DRAFT_KEY = 'tahsin_draft:' + backQ;
+  function saveDraft() {
+    var data = {};
+    form.querySelectorAll('input[type=radio]:checked').forEach(function (i) { data[i.name] = i.value; });
+    form.querySelectorAll('textarea').forEach(function (t) { if (t.value.trim()) data[t.name] = t.value; });
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: Date.now(), data: data })); } catch (e) {}
+  }
+  function applyDraft(data) {
+    Object.keys(data).forEach(function (name) {
+      var sel = '[name="' + (window.CSS && CSS.escape ? CSS.escape(name) : name) + '"]';
+      var radios = form.querySelectorAll('input[type=radio]' + sel);
+      if (radios.length) { radios.forEach(function (r) { r.checked = (r.value === data[name]); }); }
+      else { var t = form.querySelector('textarea' + sel); if (t) t.value = data[name]; }
+    });
+    rows.forEach(updateRow); updateProgress();
+  }
+
+  var asTimers = {};
+  function autosaveRow(tr) {
+    if (!rowComplete(tr)) return;
+    var sid = tr.dataset.sid;
+    var payload = {
+      santri_id: sid,
+      tanggal: (document.querySelector('input[name="tanggal"]') || {}).value || '',
+      catatan: (document.querySelector('#note_' + sid + ' textarea') || {}).value || ''
+    };
+    IND.forEach(function (k) { var c = tr.querySelector('input[name="' + k + '[' + sid + ']"]:checked'); payload[k] = c ? c.value : ''; });
+    var sig = JSON.stringify(payload);
+    if (tr.getAttribute('data-sig') === sig) return;
+    fetch('/tahsin/input/row', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: sig })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.ok) { tr.setAttribute('data-sig', sig); var b = tr.querySelector('.status-badge'); if (b) b.title = 'Tersimpan otomatis'; } })
+      .catch(function () {});
+  }
+  function scheduleAutosave(tr) { var sid = tr.dataset.sid; clearTimeout(asTimers[sid]); asTimers[sid] = setTimeout(function () { autosaveRow(tr); }, 1200); }
+
+  form.addEventListener('change', function (e) {
+    var tr = e.target.closest('.tahsin-row'); if (tr) { updateRow(tr); scheduleAutosave(tr); }
+    updateProgress(); saveDraft(); dirty = true;
+  });
+  form.addEventListener('input', function (e) {
+    if (e.target.tagName === 'TEXTAREA') {
+      var nr = e.target.closest('.note-row'); var tr = nr && nr.previousElementSibling;
+      if (tr) { updateRow(tr); scheduleAutosave(tr); }
+      grow(e.target);
+    }
+    saveDraft(); dirty = true;
+  });
+
+  document.querySelectorAll('.note-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var nr = document.getElementById(btn.dataset.target);
+      if (!nr) return;
+      nr.classList.toggle('d-none');
+      if (!nr.classList.contains('d-none')) nr.querySelector('textarea').focus();
+    });
+  });
+
+  document.querySelectorAll('.bulk').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var v = btn.dataset.val;
+      rows.forEach(function (tr) {
+        IND.forEach(function (k) { var inp = tr.querySelector('input[name="' + k + '[' + tr.dataset.sid + ']"][value="' + v + '"]'); if (inp) inp.checked = true; });
+        updateRow(tr);
+      });
+      updateProgress(); saveDraft(); dirty = true;
+    });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key < '1' || e.key > '4') return;
+    if (e.target.tagName === 'INPUT' && e.target.type === 'text') return;
+    if (e.target.tagName === 'TEXTAREA') return;
+    var seg = e.target.closest ? e.target.closest('.seg') : null;
+    if (!seg) return;
+    var tr = seg.closest('.tahsin-row'); if (!tr) return;
+    var name = seg.querySelector('input').name;
+    var inp = form.querySelector('input[name="' + name + '"][value="' + e.key + '"]');
+    if (inp) { inp.checked = true; inp.dispatchEvent(new Event('change', { bubbles: true })); }
+  });
+
+  function grow(t) { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 180) + 'px'; }
+  document.querySelectorAll('.auto-grow').forEach(function (t) { grow(t); });
+
+  var d = null; try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) {}
+  if (d && d.data && Object.keys(d.data).length) {
+    var b = document.getElementById('draftBanner'); if (b) b.classList.remove('d-none');
+    var rb = document.getElementById('draftRestore'); if (rb) rb.addEventListener('click', function () { applyDraft(d.data); b.classList.add('d-none'); });
+    var db = document.getElementById('draftDiscard'); if (db) db.addEventListener('click', function () { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} b.classList.add('d-none'); });
+  }
+
+  window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  form.addEventListener('submit', function () { dirty = false; try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} var s = document.getElementById('saveBtn'); if (s) { s.disabled = true; s.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...'; } });
+
+  rows.forEach(updateRow); updateProgress();
+})();
+</script>

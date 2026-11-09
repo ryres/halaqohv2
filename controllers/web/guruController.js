@@ -2,7 +2,7 @@ const pool = require('../../config/database');
 
 exports.list = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM guru ORDER BY id DESC');
+    const [rows] = await pool.query('SELECT * FROM guru WHERE is_deleted = 0 ORDER BY id DESC');
     res.render('master/guru', { gurus: rows, success: req.query.success || null, error: req.query.error || null });
   } catch (err) {
     console.error(err);
@@ -11,7 +11,13 @@ exports.list = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { nama, jabatan, unit } = req.body;
+  const nama = typeof req.body.nama === 'string' ? req.body.nama.trim() : '';
+  const jabatan = typeof req.body.jabatan === 'string' ? req.body.jabatan.trim() : null;
+  const unit = typeof req.body.unit === 'string' ? req.body.unit.trim() : null;
+  if (!nama) {
+    req.session.flash = { type: 'error', message: 'Nama guru wajib diisi.' };
+    return res.redirect('/guru');
+  }
   try {
     await pool.query('INSERT INTO guru (nama, jabatan, unit) VALUES (?, ?, ?)', [nama, jabatan, unit]);
     req.session.flash = { type: 'success', message: 'Guru berhasil ditambahkan.' };
@@ -26,7 +32,7 @@ exports.create = async (req, res) => {
 exports.edit = async (req, res) => {
   const { id } = req.params;
   try {
-    const [[guru]] = await pool.query('SELECT * FROM guru WHERE id = ?', [id]);
+    const [[guru]] = await pool.query('SELECT * FROM guru WHERE id = ? AND is_deleted = 0', [id]);
     res.render('master/guru-form', { guru, isEdit: true });
   } catch (err) {
     res.redirect('/guru?error=Data tidak ditemukan');
@@ -35,7 +41,13 @@ exports.edit = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { id } = req.params;
-  const { nama, jabatan, unit } = req.body;
+  const nama = typeof req.body.nama === 'string' ? req.body.nama.trim() : '';
+  const jabatan = typeof req.body.jabatan === 'string' ? req.body.jabatan.trim() : null;
+  const unit = typeof req.body.unit === 'string' ? req.body.unit.trim() : null;
+  if (!nama) {
+    req.session.flash = { type: 'error', message: 'Nama guru wajib diisi.' };
+    return res.redirect(`/guru/${id}`);
+  }
   try {
     await pool.query('UPDATE guru SET nama = ?, jabatan = ?, unit = ? WHERE id = ?', [nama, jabatan, unit, id]);
     req.session.flash = { type: 'success', message: 'Guru berhasil diperbarui.' };
@@ -49,7 +61,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query('DELETE FROM guru WHERE id = ?', [id]);
+    await pool.query('UPDATE guru SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [id]);
     req.session.flash = { type: 'success', message: 'Guru berhasil dihapus.' };
     res.redirect('/guru');
   } catch (err) {

@@ -1,97 +1,73 @@
 import json
-import random
 import sys
 
-def manhattan_distance(a, b):
-    return sum(abs(x - y) for x, y in zip(a, b))
+try:
+    import numpy as np
+    from sklearn.metrics import silhouette_score
+except ModuleNotFoundError as exc:
+    raise SystemExit(f"Missing Python dependency: {exc.name}. Run: pip install -r requirements.txt")
 
-def random_centroids(data, k, seed=42):
-    rng = random.Random(seed)
-    centroids = []
-    used_indexes = set()
-    while len(centroids) < k:
-        index = rng.randrange(len(data))
-        if index in used_indexes:
-            continue
-        used_indexes.add(index)
-        centroids.append(list(data[index]['features']))
+# Menghasilkan satu jarak Manhattan untuk setiap baris data terhadap centroid.
+def manhattan_distance_numpy(X, centroid):
+    return np.sum(np.abs(X - centroid), axis=1)
+
+# Membandingkan jarak setiap data ke seluruh centroid dan memilih indeks terdekat.
+def assign_clusters_numpy(X, centroids):
+    distances = np.array([manhattan_distance_numpy(X, centroid) for centroid in centroids])
+    return np.argmin(distances, axis=0)
+
+def deterministic_centroids(X, k):
+    """Membuat centroid awal tanpa random berdasarkan rentang setiap fitur."""
+    # Untuk k=3, urutan cluster awal adalah: maksimum, median, minimum.
+    mins = np.min(X, axis=0)
+    medians = np.median(X, axis=0)
+    maxs = np.max(X, axis=0)
+    if k == 3:
+        return np.array([maxs, medians, mins])
+
+    # Untuk k selain 3, gunakan posisi kuantil yang tersebar secara deterministik.
+    quantile_positions = np.linspace(1, 0, k)
+    return np.array([np.quantile(X, position, axis=0) for position in quantile_positions])
+
+def update_centroids_numpy(X, labels, k):
+    # Setiap centroid baru dihitung dari seluruh data yang mendapat label tersebut.
+    centroids = np.zeros((k, X.shape[1]))
+    for cluster_index in range(k):
+        points = X[labels == cluster_index]
+        if len(points) > 0:
+            # Persamaan centroid K-Means: c_j = (1 / n_j) * sum(x_i).
+            centroids[cluster_index] = np.sum(points, axis=0) / len(points)
+        else:
+            # Fallback deterministik agar cluster kosong tidak memakai pilihan acak.
+            centroids[cluster_index] = X[cluster_index % len(X)]
     return centroids
 
-def assign_clusters(data, centroids):
-    assignments = []
-    for point in data:
-        best_index = 0
-        best_distance = float('inf')
-        for index, centroid in enumerate(centroids):
-            distance = manhattan_distance(point['features'], centroid)
-            if distance < best_distance:
-                best_distance = distance
-                best_index = index
-        assignments.append(best_index)
-    return assignments
+def silhouette_score_manhattan(X, labels):
+    # Scikit-learn membutuhkan minimal dua label cluster untuk menghitung skor.
+    if len(np.unique(labels)) < 2:
+        return 0.0
+    return float(silhouette_score(X, labels, metric='manhattan'))
 
-def update_centroids(data, assignments, k):
-    dim = len(data[0]['features'])
-    clusters_features = [[] for _ in range(k)]
-    
-    for point, assignment in zip(data, assignments):
-        clusters_features[assignment].append(point['features'])
-        
-    centroids = []
-    for i in range(k):
-        if not clusters_features[i]:
-            random_point = random.choice(data)['features']
-            centroids.append(list(random_point))
-        else:
-            centroid = []
-            num_points = len(clusters_features[i])
-            for j in range(dim):
-                dim_values = sorted([pt[j] for pt in clusters_features[i]])
-                if num_points % 2 == 1:
-                    median = dim_values[num_points // 2]
-                else:
-                    median = (dim_values[num_points // 2 - 1] + dim_values[num_points // 2]) / 2.0
-                centroid.append(median)
-            centroids.append(centroid)
-    return centroids
 
-def silhouette_score(data, assignments):
-    k = max(assignments) + 1 if assignments else 0
-    clusters = [[] for _ in range(k)]
-    for index, assignment in enumerate(assignments):
-        clusters[assignment].append(index)
+def kmeans_numpy(X, k=3, max_iter=100, seed=42):
+    # Parameter seed dipertahankan untuk kompatibilitas, tetapi tidak digunakan
+    # karena seluruh inisialisasi centroid sekarang bersifat deterministik.
+    centroids = deterministic_centroids(X, k)
+    labels = np.zeros(X.shape[0], dtype=int)
 
-    scores = []
-    for index, point in enumerate(data):
-        current_cluster = assignments[index]
-        same_cluster = [j for j in clusters[current_cluster] if j != index]
-        
-        if not same_cluster:
-            scores.append(0.0)
-            continue
+    for iteration in range(max_iter):
+        # Assignment memakai centroid saat ini, lalu centroid diperbarui.
+        new_labels = assign_clusters_numpy(X, centroids)
+        if np.array_equal(new_labels, labels) and iteration > 0:
+            # Tidak ada perubahan label berarti algoritma sudah konvergen.
+            break
+        labels = new_labels
+        centroids = update_centroids_numpy(X, labels, k)
 
-        a = sum(manhattan_distance(point['features'], data[j]['features']) for j in same_cluster) / len(same_cluster)
-
-        b = float('inf')
-        for cluster_id in range(k):
-            if cluster_id == current_cluster:
-                continue
-            other_cluster = clusters[cluster_id]
-            if not other_cluster:
-                continue
-            avg_distance = sum(manhattan_distance(point['features'], data[j]['features']) for j in other_cluster) / len(other_cluster)
-            if avg_distance < b:
-                b = avg_distance
-
-        if b == float('inf'):
-            s = 0.0
-        else:
-            s = (b - a) / max(a, b)
-        scores.append(s)
-
-    return sum(scores) / len(scores) if scores else 0.0
+    return labels, centroids, silhouette_score_manhattan(X, labels)
 
 def run_clustering(data, k, max_iter):
+    # Bentuk respons kosong dipertahankan agar aman saat tidak ada data santri.
     if not data:
         return {
             'clusters': {},
@@ -101,34 +77,28 @@ def run_clustering(data, k, max_iter):
             'points': []
         }
 
-    centroids = random_centroids(data, k)
-    assignments = []
-    for _ in range(max_iter):
-        new_assignments = assign_clusters(data, centroids)
-        if assignments and new_assignments == assignments:
-            break
-        assignments = new_assignments
-        centroids = update_centroids(data, assignments, k)
+    # Konversi fitur ke matriks numerik agar operasi NumPy konsisten.
+    features = np.asarray([point['features'] for point in data], dtype=float)
+    # Validasi ini mencegah dimensi kosong, nilai NaN, dan nilai tak hingga.
+    if features.ndim != 2 or features.shape[1] == 0 or not np.isfinite(features).all():
+        raise ValueError('All data points must contain finite numeric features')
+    if not isinstance(k, int) or k < 1 or k > len(data):
+        raise ValueError('k must be an integer between 1 and the number of data points')
+    if not isinstance(max_iter, int) or max_iter < 1:
+        raise ValueError('max_iter must be a positive integer')
 
-    if not assignments:
-        assignments = assign_clusters(data, centroids)
-
-    silhouette = silhouette_score(data, assignments)
+    # Jalankan clustering; assignments tetap mengikuti urutan data input.
+    assignments, centroids, silhouette = kmeans_numpy(features, k, max_iter)
     clusters = {}
     for index, assignment in enumerate(assignments):
-        clusters.setdefault(str(assignment), []).append(data[index]['id'])
+        # API mengelompokkan ID santri berdasarkan indeks cluster internal.
+        clusters.setdefault(str(int(assignment)), []).append(data[index]['id'])
 
-   points = []
+    points = []
     for index, point in enumerate(data):
-        # Hitung rata-rata nilai fitur
-        avg_features = sum(point['features']) / len(point['features'])
-        
-        # Penentuan kategori skripsi
-        kategori = 'Menengah'
-        if avg_features < 62:
-            kategori = 'Rendah'
-        elif avg_features > 79:
-            kategori = 'Tinggi'
+        # Tambahkan metadata tampilan tanpa mengubah fitur asli dari input.
+        avg_features = float(np.mean(features[index]))
+        kategori = 'Rendah' if avg_features < 63 else 'Tinggi' if avg_features > 81 else 'Menengah'
 
         points.append({
             'id': point['id'],
@@ -136,7 +106,7 @@ def run_clustering(data, k, max_iter):
             'surat': point.get('surat', ''),
             'ayat': point.get('ayat', ''),
             'features': point['features'],
-            'cluster': assignments[index],
+            'cluster': int(assignments[index]),
             'rata_rata': avg_features,
             'kategori': kategori
         })
@@ -146,21 +116,24 @@ def run_clustering(data, k, max_iter):
 
     return {
         'clusters': clusters,
-        'centroids': centroids,
+        'centroids': centroids.tolist(),
         'silhouette': silhouette,
-        'assignments': assignments,
+        'assignments': assignments.tolist(),
         'points': points
     }
 
 def main():
     try:
+        # Node.js mengirim payload JSON melalui stdin ke proses Python.
         payload = json.load(sys.stdin)
         data = payload.get('data', [])
         k = int(payload.get('k', 3))
         max_iter = int(payload.get('maxIter', 100))
         result = run_clustering(data, k, max_iter)
+        # Hasil dikirim kembali ke Node.js sebagai JSON melalui stdout.
         json.dump(result, sys.stdout)
     except Exception as exc:
+        # Error juga dikembalikan sebagai JSON agar dapat ditangani controller.
         json.dump({'error': str(exc)}, sys.stdout)
         sys.exit(1)
 

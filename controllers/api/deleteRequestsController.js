@@ -14,10 +14,9 @@ exports.approve = async (req, res) => {
     // mark approved
     await pool.query('UPDATE delete_requests SET status = ?, approved_at = NOW() WHERE id = ?', ['approved', id]);
 
-    // delete santri -> this will cascade-delete the delete_request row due to FK ON DELETE CASCADE
-    await pool.query('DELETE FROM santri WHERE id = ?', [reqRow.santri_id]);
+    // soft delete santri (data disembunyikan, tidak dihapus permanen)
+    await pool.query('UPDATE santri SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [reqRow.santri_id]);
 
-    // log notification
     await pool.query('INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)', [reqRow.requested_by, 'Delete Approved', `Santri ${reqRow.santri_id} deleted by admin`, 'success', '/santri']);
 
     res.json({ ok: true });

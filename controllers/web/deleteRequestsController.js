@@ -27,7 +27,7 @@ exports.approve = async (req, res) => {
     if (!reqRow) return res.redirect('/delete-requests?error=Request tidak ditemukan');
 
     await pool.query('UPDATE delete_requests SET status = ?, approved_at = NOW() WHERE id = ?', ['approved', id]);
-    await pool.query('DELETE FROM santri WHERE id = ?', [reqRow.santri_id]);
+    await pool.query('UPDATE santri SET is_deleted = 1, deleted_at = NOW() WHERE id = ? AND is_deleted = 0', [reqRow.santri_id]);
     await pool.query('INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)', 
       [reqRow.requested_by, 'Delete Approved', `Santri ${reqRow.santri_id} telah dihapus`, 'success', '/santri']);
 

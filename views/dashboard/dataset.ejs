@@ -16,6 +16,7 @@
   <div class="col-12 col-md-7 mb-3">
     <div class="card p-4 h-100 border-0 shadow-sm" style="border-radius:16px;">
       <h5 class="d-flex align-items-center fw-bold" style="color:var(--primary);"><i class="bi bi-file-earmark-arrow-up me-2"></i>Import Dataset Santri</h5>
+      <% if (session && session.role === 'admin') { %>
       <p class="text-muted small">Unggah file CSV atau Excel (.xlsx) untuk menambahkan santri dalam jumlah banyak sekaligus.</p>
       <hr>
       <form action="/dataset/import" method="POST" enctype="multipart/form-data">
@@ -29,13 +30,14 @@
           </div>
         </div>
       </form>
-      <% if (session && ['admin', 'guru_tahfizh'].includes(session.role)) { %>
       <hr>
       <form action="/dataset/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus semua dataset santri? Tindakan ini tidak dapat dibatalkan.');">
         <button type="submit" class="btn btn-danger w-100 d-flex justify-content-center align-items-center">
           <i class="bi bi-trash me-2"></i> Hapus Semua Dataset
         </button>
       </form>
+      <% } else { %>
+      <p class="text-muted small mb-0">Import dan hapus dataset hanya tersedia untuk admin.</p>
       <% } %>
     </div>
   </div>

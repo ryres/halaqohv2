@@ -1,4 +1,4 @@
-<style>
+﻿<style>
   :root {
     --primary: #6D28D9;
     --primary-light: #8B5CF6;
@@ -8,9 +8,13 @@
   .result-chart-card canvas { width: 100% !important; height: 100% !important; }
   .result-chart-card .chart-wrapper { width: 100%; min-height: 280px; }
   .result-chart-card .chart-wrapper.line-chart { min-height: 220px; }
+  .scatter-modal-chart-wrapper { height: min(70vh, 620px); min-height: 320px; }
+  #scatterChart, #scatterChartModalCanvas { cursor: grab; }
+  #scatterChart:active, #scatterChartModalCanvas:active { cursor: grabbing; }
 
   @media (max-width: 767px) {
     .result-chart-card .chart-wrapper { min-height: 220px; }
+    .scatter-modal-chart-wrapper { height: 60vh; min-height: 260px; }
   }
 
   .card {
@@ -77,7 +81,7 @@
   .table-responsive::-webkit-scrollbar-track { background: #f1f1f1; }
 </style>
 
-<div class="container py-4">
+<div class="container py-4" id="resultMain">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div>
       <h2 class="fw-bold" style="color: var(--primary-dark);">
@@ -97,9 +101,9 @@
 
   <div class="row">
     <div class="col-12 col-lg-8">
-      <div class="card p-3 mb-3 result-chart-card">
-        <h6><i class="bi bi-graph-up me-2"></i>Line Chart — Perubahan Centroid per Iterasi</h6>
-        <div class="chart-wrapper line-chart"><canvas id="lineChart"></canvas></div>
+      <div class="card p-3 mb-3">
+        <h6><i class="bi bi-scatter-chart me-2"></i>Penyebaran Titik Cluster</h6>
+        <div class="chart-wrapper"><canvas id="scatterChart"></canvas></div>
       </div>
 
       <div class="card p-3 mb-3">
@@ -150,8 +154,8 @@
       </div>
 
       <div class="card p-3 mb-3">
-        <h6><i class="bi bi-radar me-2"></i>Karakteristik Cluster (Centroid)</h6>
-        <canvas id="radarChart" style="max-height:280px;"></canvas>
+        <h6><i class="bi bi-graph-up me-2"></i>Line Chart — Perubahan Centroid per Iterasi</h6>
+        <div class="chart-wrapper line-chart"><canvas id="lineChart"></canvas></div>
       </div>
 
       <div class="card p-3 mb-3" style="background:#f8f9fa;">
@@ -169,19 +173,83 @@
   </div>
 </div>
 
+<div class="modal fade" id="scatterChartModal" tabindex="-1" aria-labelledby="scatterChartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scatterChartModalLabel">Penyebaran Titik Cluster</h5>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetScatterChartZoom()" title="Reset zoom">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="scatter-modal-chart-wrapper"><canvas id="scatterChartModalCanvas"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="resultEmpty" class="d-none">
+  <div class="container py-5">
+    <div class="text-center mx-auto" style="max-width:540px;">
+      <div style="font-size:64px;line-height:1;color:#c7c9f5;"><i class="bi bi-diagram-3"></i></div>
+      <h3 class="mt-3 mb-1 empty-title">Belum Ada Hasil Klaster</h3>
+      <p class="text-muted empty-msg">Hasil analisis clustering belum tersedia. Jalankan proses clustering terlebih dahulu untuk melihat hasilnya di sini.</p>
+      <% if (session && session.role !== 'guru_tahfizh') { %>
+        <a href="/clustering" class="btn btn-primary"><i class="bi bi-graph-up me-1"></i>Buat Klaster Sekarang</a>
+      <% } else { %>
+        <p class="text-muted small mb-0">Hubungi admin untuk menjalankan proses clustering.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 <script>
 let clusteringData = null;
 let tableSort = { field: 'label', direction: 'asc' };
 let barChart = null;
-let radarChart = null;
+let scatterChart = null;
+let scatterModalChart = null;
 let lineChart = null;
+let scatterDragInProgress = false;
+
+function openScatterChartPopup() {
+  if (!scatterChart || !window.bootstrap) return;
+
+  const modalElement = document.getElementById('scatterChartModal');
+  const canvas = document.getElementById('scatterChartModalCanvas');
+  if (!modalElement || !canvas) return;
+
+  destroyChart(scatterModalChart);
+  scatterModalChart = new Chart(canvas, {
+    type: 'scatter',
+    data: scatterChart.data,
+    options: {
+      ...scatterChart.config.options,
+      maintainAspectRatio: false
+    }
+  });
+
+  bootstrap.Modal.getOrCreateInstance(modalElement).show();
+}
+
+function zoomScatterChart(factor) {
+  if (scatterChart) scatterChart.zoom(factor);
+}
+
+function resetScatterChartZoom() {
+  if (scatterChart) scatterChart.resetZoom();
+  if (scatterModalChart) scatterModalChart.resetZoom();
+}
 
 function getColor(label) {
-  if (label === 'Tinggi') return '#16a34a';
-  if (label === 'Menengah') return '#f59e0b';
-  if (label === 'Rendah') return '#ef4444';
+  if (label.startsWith('Tinggi')) return '#16a34a';
+  if (label.startsWith('Menengah')) return '#f59e0b';
+  if (label.startsWith('Rendah')) return '#ef4444';
   return '#6D28D9';
 }
 
@@ -191,30 +259,26 @@ function destroyChart(chart) {
   }
 }
 
+function showEmptyState(kind) {
+  const main = document.getElementById('resultMain');
+  const empty = document.getElementById('resultEmpty');
+  if (main) main.classList.add('d-none');
+  if (!empty) return;
+  empty.classList.remove('d-none');
+  if (kind === 'corrupt') {
+    const t = empty.querySelector('.empty-title'); if (t) t.textContent = 'Data Hasil Tidak Terbaca';
+    const m = empty.querySelector('.empty-msg'); if (m) m.textContent = 'Data clustering rusak atau tidak lengkap. Silakan jalankan ulang proses clustering.';
+  }
+}
+
 function loadResult() {
   const stored = sessionStorage.getItem('clusteringResult');
-  if (!stored) {
-    document.body.innerHTML = `
-      <div class="container mt-5">
-        <div class="alert alert-warning">
-          <i class="bi bi-exclamation-triangle me-2"></i>
-          Belum ada hasil clustering. Jalankan clustering terlebih dahulu di halaman <a href="/clustering" class="alert-link">Clustering</a>.
-        </div>
-      </div>
-    `;
-    return;
-  }
+  if (!stored) { showEmptyState('none'); return; }
 
   try {
     clusteringData = JSON.parse(stored);
   } catch (error) {
-    document.body.innerHTML = `
-      <div class="container mt-5">
-        <div class="alert alert-danger">
-          <i class="bi bi-bug me-2"></i>Data clustering rusak. Silakan jalankan ulang clustering.
-        </div>
-      </div>
-    `;
+    showEmptyState('corrupt');
     return;
   }
 
@@ -231,7 +295,7 @@ function loadResult() {
   window.addEventListener('resize', () => {
     setTimeout(() => {
       if (barChart) barChart.resize();
-      if (radarChart) radarChart.resize();
+      if (scatterChart) scatterChart.resize();
       if (lineChart) lineChart.resize();
     }, 120);
   });
@@ -261,7 +325,7 @@ function updateSortIcons() {
 function getSortedPoints() {
   if (!clusteringData || !Array.isArray(clusteringData.points)) return [];
   const points = [...clusteringData.points];
-  const order = { 'Tinggi': 0, 'Menengah': 1, 'Rendah': 2 };
+  const order = { 'Tinggi - Mumtaz': 0, 'Menengah - Reguler': 1, 'Rendah - Pembinaan': 2 };
   return points.sort((a, b) => {
     let result = 0;
     if (tableSort.field === 'name') {
@@ -295,8 +359,8 @@ function renderSantriTable() {
 
   container.innerHTML = points.map(p => {
     const label = p.label || 'Tidak Diketahui';
-    const badgeClass = label === 'Tinggi' ? 'bg-success' : label === 'Menengah' ? 'bg-warning text-dark' : 'bg-danger';
-    const clusterText = p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-';
+    const badgeClass = label.startsWith('Tinggi') ? 'bg-success' : label.startsWith('Menengah') ? 'bg-warning text-dark' : 'bg-danger';
+    const clusterText = p.cluster !== undefined && p.cluster !== null ? p.cluster : '-';
     return `
       <tr>
         <td>${p.name || '-'}</td>
@@ -310,17 +374,25 @@ function renderSantriTable() {
 }
 
 function renderSummaryStats() {
-  const stats = Array.isArray(clusteringData.clusterStats) ? clusteringData.clusterStats : [];
+  const stats = (Array.isArray(clusteringData.clusterStats) ? clusteringData.clusterStats : [])
+    .slice()
+    .sort((a, b) => {
+      const order = { C0: 0, C2: 1, C1: 2 };
+      return (order[a.cluster] ?? 99) - (order[b.cluster] ?? 99);
+    });
   const total = clusteringData.points ? clusteringData.points.length : 0;
   const summaryEl = document.getElementById('clusterCountSummary');
   if (summaryEl) {
     summaryEl.innerHTML = stats.map(s => {
       const pct = total ? ((s.size / total) * 100).toFixed(1) : '0.0';
       const color = s.color || getColor(s.label);
+      const label = s.label === 'Tinggi - Mumtaz' ? 'Tinggi (Mumtaz)' :
+        s.label === 'Menengah - Reguler' ? 'Menengah (Reguler)' :
+        s.label === 'Rendah - Pembinaan' ? 'Rendah (Pembinaan)' : (s.label || 'Tidak Diketahui');
       return `
         <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
-          <span><span class="cluster-dot" style="background:${color};"></span>${s.label || 'Cluster ' + s.cluster}</span>
-          <span class="text-muted">${s.size} santri (${pct}%)</span>
+          <span><span class="cluster-dot" style="background:${color};"></span><strong>${s.cluster}: ${label}</strong></span>
+          <span class="text-muted">${s.size} Santri (${pct}%)</span>
         </div>
       `;
     }).join('') || '<span class="text-muted">Tidak ada data cluster.</span>';
@@ -335,7 +407,7 @@ function renderSummaryStats() {
       </div>
       ${stats.map(s => `
         <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
-          <span><span class="cluster-dot" style="background:${s.color || getColor(s.label)};"></span>${s.label || 'Cluster ' + s.cluster}</span>
+          <span><span class="cluster-dot" style="background:${s.color || getColor(s.label)};"></span>${s.cluster} - ${s.label || 'Tidak Diketahui'}</span>
           <span class="fw-semibold">${Number(s.avgScore || 0).toFixed(2)}</span>
         </div>
       `).join('')}
@@ -348,29 +420,18 @@ function renderCharts() {
   const stats = Array.isArray(clusteringData.clusterStats) ? clusteringData.clusterStats : [];
   const silhouette = Number(clusteringData.silhouette || 0);
 
-  const barOrder = ['Tinggi', 'Menengah', 'Rendah'];
-  const barLabels = [];
-  const barValues = [];
-  const barColors = [];
-  const barAvgs = [];
-
-  barOrder.forEach(label => {
-    const stat = stats.find(s => s.label === label);
-    if (stat) {
-      barLabels.push(label);
-      barValues.push(stat.size || 0);
-      barColors.push(stat.color || getColor(label));
-      barAvgs.push(stat.avgScore || 0);
-    }
+  const orderedStats = stats.slice().sort((a, b) => {
+    const order = { C0: 0, C2: 1, C1: 2 };
+    return (order[a.cluster] ?? 99) - (order[b.cluster] ?? 99);
   });
-  stats.forEach(s => {
-    if (!barOrder.includes(s.label)) {
-      barLabels.push(s.label || 'Cluster ' + s.cluster);
-      barValues.push(s.size || 0);
-      barColors.push(s.color || '#6D28D9');
-      barAvgs.push(s.avgScore || 0);
-    }
+  const barLabels = orderedStats.map(s => {
+    if (s.label === 'Tinggi - Mumtaz') return 'C0: Tinggi (Mumtaz)';
+    if (s.label === 'Menengah - Reguler') return 'C2: Menengah (Reguler)';
+    if (s.label === 'Rendah - Pembinaan') return 'C1: Rendah (Pembinaan)';
+    return `${s.cluster}: ${s.label || 'Tidak Diketahui'}`;
   });
+  const barValues = orderedStats.map(s => s.size || 0);
+  const barColors = orderedStats.map(s => s.color || getColor(s.label));
   destroyChart(barChart);
   barChart = new Chart(document.getElementById('barChart'), {
     type: 'bar',
@@ -380,7 +441,7 @@ function renderCharts() {
         label: 'Jumlah Santri',
         data: barValues,
         backgroundColor: barColors,
-        borderRadius: 6,
+        borderRadius: 5,
         borderSkipped: false
       }]
     },
@@ -392,42 +453,75 @@ function renderCharts() {
         tooltip: {
           callbacks: {
             label: context => {
-              const idx = context.dataIndex;
-              const value = barValues[idx] || 0;
+              const value = context.raw || 0;
               const percent = points.length ? ((value / points.length) * 100).toFixed(1) : '0.0';
-              const avg = barAvgs[idx] || 0;
-              return `${value} santri (${percent}%) — Avg ${avg.toFixed(2)}`;
+              return `${value} santri (${percent}%)`;
             }
           }
         }
       },
       scales: {
         x: { grid: { display: false } },
-        y: { beginAtZero: true, title: { display: true, text: 'Jumlah', font: { weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+        y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Jumlah' } }
       }
     }
   });
-  const radarLabels = ['Tajwid', 'Kelancaran', 'Makhraj'];
-  const radarDatasets = stats.map(s => ({
-    label: s.label || `Cluster ${s.cluster}`,
-    data: (s.centroid || [0, 0, 0]).slice(0, 3),
-    backgroundColor: (s.color || '#6D28D9') + '55',
-    borderColor: s.color || '#6D28D9',
-    pointBackgroundColor: s.color || '#6D28D9',
-    fill: true,
-    tension: 0.2
+
+  const scatterDatasets = stats.map(stat => ({
+    label: stat.cluster,
+    data: points
+      .filter(point => point.cluster === stat.cluster)
+      .map(point => ({ x: point.features[0], y: point.features[1], name: point.name })),
+    backgroundColor: stat.color || getColor(stat.label),
+    borderColor: stat.color || getColor(stat.label),
+    pointRadius: 5,
+    pointHoverRadius: 7
   }));
-  destroyChart(radarChart);
-  radarChart = new Chart(document.getElementById('radarChart'), {
-    type: 'radar',
-    data: { labels: radarLabels, datasets: radarDatasets },
+  destroyChart(scatterChart);
+  scatterChart = new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: { datasets: scatterDatasets },
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } } },
-      scales: { r: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.06)' }, pointLabels: { font: { weight: 'bold' } } } }
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 12 } },
+        tooltip: { callbacks: { label: context => `${context.dataset.label}: ${context.raw.name || 'Santri'}` } },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'xy'
+          },
+          pan: { enabled: true, mode: 'xy', threshold: 0 }
+        }
+      },
+      scales: {
+        x: { type: 'linear', beginAtZero: true, max: 100, title: { display: true, text: 'Tajwid' } },
+        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Kelancaran' } }
+      }
     }
   });
+  const scatterCanvas = document.getElementById('scatterChart');
+  let dragStart = null;
+  scatterCanvas.addEventListener('pointerdown', event => {
+    dragStart = { x: event.clientX, y: event.clientY };
+    scatterDragInProgress = false;
+  });
+  scatterCanvas.addEventListener('pointermove', event => {
+    if (!dragStart) return;
+    scatterDragInProgress = Math.hypot(event.clientX - dragStart.x, event.clientY - dragStart.y) > 4;
+  });
+  scatterCanvas.addEventListener('pointerup', () => { dragStart = null; });
+  scatterCanvas.addEventListener('click', () => {
+    if (!scatterDragInProgress) openScatterChartPopup();
+    scatterDragInProgress = false;
+  });
+  scatterCanvas.addEventListener('dblclick', () => scatterChart.resetZoom());
+  document.getElementById('scatterChartModal').addEventListener('hidden.bs.modal', () => {
+    destroyChart(scatterModalChart);
+    scatterModalChart = null;
+  }, { once: true });
   const iterCount = Math.max(3, Math.ceil(silhouette * 10));
   const iterLabels = Array.from({ length: iterCount }, (_, i) => `Iter ${i + 1}`);
   const iterData = iterLabels.map((_, i) => parseFloat(((0.2 + ((i + 1) / iterCount) * (silhouette - 0.2))).toFixed(4)));
@@ -484,7 +578,7 @@ function downloadSantriCSV() {
     p.guru || '-', 
     p.halaqoh || '-', 
     p.label || 'Tidak Diketahui', 
-    p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-'
+    p.cluster !== undefined && p.cluster !== null ? p.cluster : '-'
   ]);
   
   const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\r\n');
@@ -515,7 +609,7 @@ function downloadSantriPDF() {
     p.guru || '-',
     p.halaqoh || '-',
     p.label || 'Tidak Diketahui',
-    p.cluster !== undefined && p.cluster !== null ? `C${p.cluster}` : '-',
+    p.cluster !== undefined && p.cluster !== null ? p.cluster : '-',
     statsMap[p.cluster] !== undefined ? statsMap[p.cluster].toFixed(2) : '-'
   ]);
 

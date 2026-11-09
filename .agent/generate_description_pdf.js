@@ -15,7 +15,6 @@ const path = require('path');
     const out = path.join(__dirname, 'halaqohv2_description.pdf');
     await page.pdf({ path: out, format: 'A4', printBackground: true });
     await browser.close();
-    console.log('PDF generated at', out);
   } catch (err) {
     console.error(err);
     process.exit(1);
